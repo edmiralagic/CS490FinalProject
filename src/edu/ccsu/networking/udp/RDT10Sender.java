@@ -10,13 +10,15 @@ import java.util.Arrays;
  * to the receiver
  * @author Chad Williams
  */
-public class RDT10Sender extends Thread implements Runnable {
+public class RDT10Sender extends Thread {
+
     private int receiverPortNumber = 0;
     private int portNumber = 0;
     private DatagramSocket socket = null;
     private InetAddress internetAddress = null;
     private String eof = "EOF";
     private int currentSeq = 0;
+    private boolean receivedAck = false;
 
     public RDT10Sender(int portNumber) {
         this.portNumber = portNumber;
@@ -47,6 +49,7 @@ public class RDT10Sender extends Thread implements Runnable {
         int testSeq = (int)ack.getData()[0];
         System.out.println("SENDER... Recieved Ack is " + testSeq + ", expected ack is " + currentSeq);
         if(testSeq == currentSeq){
+            currentSeq = currentSeq ^ 1;
             return true;
         }
         return false;
@@ -60,7 +63,6 @@ public class RDT10Sender extends Thread implements Runnable {
      */
     public void receiveAck(DatagramPacket packet) throws SocketException, IOException, InterruptedException{
         System.out.println("SENDER... Waiting for Ack from Receiver");
-        boolean receivedAck = false;
         while(!receivedAck){
             try {
                 byte[] buf = new byte[16];
@@ -68,13 +70,17 @@ public class RDT10Sender extends Thread implements Runnable {
                 socket.receive(ack);
                 System.out.println("SENDER... Recieved ACK with Sequence Number: " + (int)ack.getData()[0]);
                 if(checkAck(ack)){
+                    System.out.println("SENDER... Received Ack checks out!");
                     receivedAck = true;
                 }
                 else {
-                    sendPacket(packet);
+                    receivedAck = false;
+                    System.out.println("SENDER... Resending the packet!");
+                    break;
                 }
             }
             catch(NullPointerException e){
+                System.out.println("SENDER... NULL POINTER EXCEPTION from received ack.");
                 receivedAck = false;
             }
         }
@@ -101,33 +107,28 @@ public class RDT10Sender extends Thread implements Runnable {
      *  following after (max total size is 128)
      */
     public DatagramPacket makePacket(byte[] data){
-        if(currentSeq == 0){
-            currentSeq = 1;
-        }
-        else{
-            currentSeq = 0;
-        }
         byte[] packetData = new byte[(data.length + 2)];
         packetData[1] = (byte)currentSeq;
         packetData[0] = (byte)packetData.length;
         for(int i = 2; i < packetData.length; i++){
             packetData[i] = data[i-2];
         }
-        System.out.println("SENDER.. Making a packet with packet size " + packetData.length + " and with seq # " + currentSeq);
+        System.out.println("SENDER.. Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
         DatagramPacket packet = new DatagramPacket(packetData, packetData.length, internetAddress, receiverPortNumber);
         return packet;
     }
 
     public void sendPacket(DatagramPacket packet) throws SocketException, IOException, InterruptedException{
-        int packetNumber = 0;
-        System.out.println("SENDER.... sending packet("+new String((packetNumber++)+")")+": '" + new String(packet.getData()) + "'");
-        System.out.println("SENDER... Sending packet to IP address " + internetAddress + " and port number " + receiverPortNumber);
-        socket.send(packet);
-        long tStart = System.currentTimeMillis();
-        receiveAck(packet);
-        long tEnd = System.currentTimeMillis();
-        long rtt = tEnd - tStart;
-        System.out.println("SENDER... RTT calculated: " + rtt + "ms" +"\n\n");
+       while(!receivedAck) {
+           System.out.println("SENDER... Sending packet '" + new String(packet.getData()) + "' to IP address " + internetAddress + " and port number " + receiverPortNumber);
+           socket.send(packet);
+           long tStart = System.currentTimeMillis();
+           receiveAck(packet);
+           long tEnd = System.currentTimeMillis();
+           long rtt = tEnd - tStart;
+           System.out.println("SENDER... RTT calculated: " + rtt + "ms" + "\n\n");
+       }
+        receivedAck = false;
     }
     
     /**

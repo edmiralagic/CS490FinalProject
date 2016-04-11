@@ -12,13 +12,12 @@ import java.util.Arrays;
  *
  * @author Chad Williams
  */
-public class RDT10Receiver extends Thread implements Runnable {
+public class RDT10Receiver extends Thread {
 
     private int port;
     private DatagramSocket receivingSocket = null;
     private String dataString = "";
-    private int currentSeq = 1;
-    private byte[] seq =  {(byte)currentSeq};
+    private int currentSeq = 0;
 
     public RDT10Receiver(String name, int port) {
         super(name);
@@ -35,7 +34,8 @@ public class RDT10Receiver extends Thread implements Runnable {
     public void deliverData(byte[] data) {
         if(new String(data).equalsIgnoreCase("eof")){
             System.out.println("\n\nFinal result: '" + dataString + "'");
-            System.exit(0);
+            //System.exit(0);
+            stopListening();
         }
         else {
             System.out.println("RECEIVER... delivered packet with: '" + new String(data) + "'");
@@ -51,7 +51,7 @@ public class RDT10Receiver extends Thread implements Runnable {
     public boolean checkPacketSeq(DatagramPacket packet){
         byte[] packetData = packet.getData();
         int seq = (int)packetData[1];
-        if( seq == currentSeq){
+        if(seq == currentSeq){
             System.out.println("RECEIVER... Packet received has the correct seq number!");
             return true;
         }
@@ -66,7 +66,7 @@ public class RDT10Receiver extends Thread implements Runnable {
     public void run() {
         try {
             receivingSocket = new DatagramSocket(port);
-
+            System.out.println("RECEIVER.. Socket created with port " + port);
             while(true) {
                 System.out.println("RECEIVER... waiting for packet");
                 byte[] buf = new byte[128];
@@ -74,40 +74,27 @@ public class RDT10Receiver extends Thread implements Runnable {
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 receivingSocket.receive(packet);
                 int packetSize = Math.abs((int)packet.getData()[0]);
-                if(checkPacketSeq(packet)){
-                    System.out.println("DATA LENGTH: " + packetSize);
-                    byte[] packetData = Arrays.copyOfRange(packet.getData(), 2, packetSize);
-                    deliverData(packetData);
 
-                    if(currentSeq == 0){
-                        currentSeq = 1;
-                    }
-                    else{
-                        currentSeq = 0;
-                    }
-                    DatagramPacket Ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
-                    receivingSocket.send(Ack);
-                    System.out.print("RECEIVER... Sending Ack " + currentSeq + " to IP address " + packet.getAddress());
-                    System.out.print(" and port number " + packet.getPort() + "\n");
+                if(checkPacketSeq(packet)){
+                    System.out.println("RECEIVER... Received a packet with length: " + packetSize + " bytes.");
+                    byte[] packetData = Arrays.copyOfRange(packet.getData(),2,packetSize);
+                    deliverData(packetData);
+                    byte[] seq =  {(byte)currentSeq};
+                    DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
+                    receivingSocket.send(ack);
+                    System.out.println("RECEIVER... Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+                    currentSeq = currentSeq ^ 1;
                 }
                 else{
-                    DatagramPacket Ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
-                    receivingSocket.send(Ack);
+                    byte[] seq =  {(byte)currentSeq};
+                    DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
+                    receivingSocket.send(ack);
                     System.out.print("RECEIVER... Sending Ack " + currentSeq + " to IP address " + packet.getAddress());
                     System.out.print(" and port number " + packet.getPort() + "\n");
-                    if(currentSeq == 0){
-                        currentSeq = 1;
-                    }
-                    else{
-                        currentSeq = 0;
-                    }
                 }
-
-
-
             }
         } catch (Exception e) {
-            stopListening();
+            //stopListening();
         }
     }
 }

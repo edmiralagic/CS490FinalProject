@@ -20,25 +20,26 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args){
+
         RDT10Receiver receiverThread = null;
-        RDT10Sender senderThread = null;
+
         try{
              //Start receiver
-            receiverThread = new RDT10Receiver("Receiver", 56141);
+            receiverThread = new RDT10Receiver("Receiver", 3020);
             receiverThread.start();
-            
+
             // Create sender
             byte[] targetAddress = {(byte)127,(byte)0,(byte)0,(byte)1};
-            RDT10Sender sender = new RDT10Sender(58002);
-            sender.startSender(targetAddress, 56141);
-            
+            RDT10Sender sender = new RDT10Sender(2010);
+            sender.startSender(targetAddress, 3020);
+
             Scanner scan = new Scanner(System.in);
             System.out.println("Please enter a message you want to send: ");
             String data = scan.nextLine();
 
                 // Send the data
                 sender.rdtSend(data.getBytes());
-                
+
                 // Sleeping simply for demo visualization purposes
                 Thread.sleep(10000);  
 
