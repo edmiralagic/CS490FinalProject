@@ -111,7 +111,7 @@ public class SenderUDP extends Thread {
                 }
             }
             catch(NullPointerException e){
-                System.out.println("SENDER:: EXCEPTION: NULL POINTER EXCEPTION from received ack.");
+                System.out.println("SENDER:: ERROR: NULL POINTER EXCEPTION from received ack.");
                 receivedAck = false;
             }
         }
@@ -168,20 +168,20 @@ public class SenderUDP extends Thread {
      */
     public void sendPacket(DatagramPacket packet) throws SocketException, IOException, InterruptedException{
        while(!receivedAck) {
+           System.out.println("SENDER:: INFO: Sending packet '" + new String(packet.getData()) + "' to IP address " + targetAddress + " and port number " + receiverPortNumber);
+           socket.send(packet);
+           socket.setSoTimeout((int)timeout);
+           //Thread.sleep(100);
+           long tStart = System.currentTimeMillis();
+           System.out.println("SENDER:: INFO: Set timeout to " + timeout + " ms");
            try {
-               System.out.println("SENDER:: INFO: Sending packet '" + new String(packet.getData()) + "' to IP address " + targetAddress + " and port number " + receiverPortNumber);
-               socket.send(packet);
-               socket.setSoTimeout((int)timeout);
-               long tStart = System.currentTimeMillis();
-               Thread.sleep(75);
-               System.out.println("SENDER:: INFO: Set timeout to " + timeout + " ms");
                receiveAck(packet);
                long rtt = System.currentTimeMillis() - tStart;
-               adjustTimeout(rtt);
+               //adjustTimeout(rtt);
                System.out.println("SENDER:: INFO: RTT calculated: " + rtt + "ms, timeout adjusted to " + timeout + " ms");
            }
            catch(SocketTimeoutException e){
-               System.out.println("SENDER:: INFO: Socket timed out, sending packet again.");
+               System.out.println("SENDER:: ERROR: Socket timed out, sending packet again.");
                receivedAck = false;
            }
        }

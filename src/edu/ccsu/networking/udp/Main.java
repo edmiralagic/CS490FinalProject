@@ -22,11 +22,11 @@ public class Main {
 
         try{
              //Start receiver
-            receiverThread = new ReceiverUDP(51000);
-            receiverThread.start();
+//            receiverThread = new ReceiverUDP(51000);
+//            receiverThread.start();
 
             // Create sender
-            byte[] targetAddress = {(byte)127,(byte)0,(byte)0,(byte)1};
+            byte[] targetAddress = {(byte)192,(byte)168,(byte)1,(byte)4};
             SenderUDP sender = new SenderUDP(51001);
             sender.startSender(targetAddress, 51000);
 

@@ -44,7 +44,7 @@ public class ReceiverUDP extends Thread {
         /*0x24 is $ in hex. This value is being used as EOF for a bigger packet which will be delivered in
         multiple UDP datagrams.*/
         if(data[0] == 0x24){
-            System.out.println("\n\nFinal result: '" + dataString + "'\n\n");
+            System.out.println("\n\nRECEIVER:: FINAL: '" + dataString + "'\n\n");
             stopListening();
         }
         else {
@@ -116,7 +116,7 @@ public class ReceiverUDP extends Thread {
             }
         }
         catch (Exception e) {
-            System.out.println("RECEIVER:: EXCEPTION: Exception occured at the receiver side!");
+            System.out.println("RECEIVER:: ERROR: Exception occured at the receiver side!");
         }
     }
 }
