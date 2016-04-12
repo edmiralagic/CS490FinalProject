@@ -10,52 +10,60 @@ import java.util.Arrays;
  * the specified and delivers them. Recall this simple implementation does not
  * handle loss or corrupted packets.
  *
- * @author Chad Williams
+ * @author Deepankar Malhan, Edmir Alagic, Ben Downs
  */
 public class ReceiverUDP extends Thread {
 
-    private int port;
+    private final int receiverPort;
     private DatagramSocket receivingSocket = null;
     private String dataString = "";
     private int currentSeq = 0;
 
-    public ReceiverUDP(String name, int port) {
-        super(name);
-        this.port = port;
+    public ReceiverUDP(int port) {
+        receiverPort = port;
     }
-
+    
+    /**
+     * The final method called to close the receiver's Datagram socket.
+     */
     public void stopListening() {
         if (receivingSocket != null) {
             receivingSocket.close();
-            System.out.println("RECEIVER... Closing the receiver socket.");
+            System.out.println("RECEIVER:: INFO: Closing the receiver socket");
         }
     }
-
+    
+    /**
+     * Delivers the data to either a String, or displays the final result and calls stopListening to stop listening
+     * for more data.
+     * @param data 
+     */
     public void deliverData(byte[] data) {
-        if(new String(data).equalsIgnoreCase("eof")){
+        /*0x24 is $ in hex. This value is being used as EOF for a bigger packet which will be delivered in
+        multiple UDP datagrams.*/
+        if(data[0] == 0x24){
             System.out.println("\n\nFinal result: '" + dataString + "'");
-            //System.exit(0);
             stopListening();
         }
         else {
-            System.out.println("RECEIVER... delivered packet with: '" + new String(data) + "'");
+            System.out.println("RECEIVER:: SUCCESS: Delivered packet with: '" + new String(data) + "'");
             dataString += new String(data);
         }
     }
 
     /**
-     *  Checks if the packet received
-     *  has the correct sequence number
-     *  returns a boolean
+     *  Checks if the packet received has the correct sequence number
+     * 
+     * @return boolean
      */
     public boolean checkPacketSeq(DatagramPacket packet){
         byte[] packetData = packet.getData();
-        int seq = (int)packetData[1];
+        int seq = (int)packetData[0];
         if(seq == currentSeq){
-            System.out.println("RECEIVER... Packet received has the correct seq number!");
+            System.out.println("RECEIVER:: INFO: Packet received has the correct seq number!");
             return true;
         }
-        System.out.println("RECEIVER... Packet received has incorrect seq number, waiting for the right one.");
+        System.out.println("RECEIVER:: ERROR: Packet received has incorrect seq number, waiting for the right one.");
         return false;
     }
 
@@ -65,8 +73,8 @@ public class ReceiverUDP extends Thread {
      */
     public void run() {
         try {
-            receivingSocket = new DatagramSocket(port);
-            System.out.println("RECEIVER.. Socket created with port " + port);
+            receivingSocket = new DatagramSocket(receiverPort);
+            System.out.println("RECEIVER.. Socket created with port " + receiverPort);
 
             while(true){
                 System.out.println("RECEIVER... waiting for packet");
@@ -74,11 +82,11 @@ public class ReceiverUDP extends Thread {
                 byte[] buf = new byte[128];
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 receivingSocket.receive(packet);
-                int packetSize = Math.abs((int)packet.getData()[0]);
+                int packetSize = packet.getLength();
 
                 if(checkPacketSeq(packet)){
                     System.out.println("RECEIVER... Received a packet with length: " + packetSize + " bytes.");
-                    byte[] packetData = Arrays.copyOfRange(packet.getData(),2,packetSize);
+                    byte[] packetData = Arrays.copyOfRange(packet.getData(),1,packetSize);
                     deliverData(packetData);
                     byte[] seq =  {(byte)currentSeq};
                     DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());

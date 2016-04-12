@@ -1,6 +1,7 @@
 package edu.ccsu.networking.udp;
 
 import java.util.Scanner;
+import java.nio.charset.Charset;
 
 /**
  * The main method takes in a <b>String</b> from the user and
@@ -21,7 +22,7 @@ public class Main {
 
         try{
              //Start receiver
-            receiverThread = new ReceiverUDP("Receiver", 3020);
+            receiverThread = new ReceiverUDP(3020);
             receiverThread.start();
 
             // Create sender
@@ -34,7 +35,7 @@ public class Main {
             String data = scan.nextLine();
 
                 // Send the data
-                sender.rdtSend(data.getBytes());
+                sender.rdtSend(data.getBytes(Charset.forName("UTF-8")));
 
                 // Sleeping simply for demo visualization purposes
                 Thread.sleep(10000);  

@@ -1,4 +1,5 @@
 package edu.ccsu.networking.udp;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.*;
@@ -10,8 +11,8 @@ public class SenderUDP extends Thread {
     private int receiverPortNumber = 0;
     private int portNumber = 0;
     private DatagramSocket socket = null;
-    private InetAddress internetAddress = null;
-    private String eof = "EOF";
+    private InetAddress targetAddress = null;
+    private final byte EOF = 0x24;
     private int currentSeq = 0;
     private boolean receivedAck = false;
 
@@ -27,7 +28,7 @@ public class SenderUDP extends Thread {
      */
     public void startSender(byte[] targetAddress, int receiverPortNumber) throws SocketException, UnknownHostException {
         socket = new DatagramSocket(portNumber);
-        internetAddress = InetAddress.getByAddress(targetAddress);
+        this.targetAddress = InetAddress.getByAddress(targetAddress);
         this.receiverPortNumber = receiverPortNumber;
     }
 
@@ -97,31 +98,27 @@ public class SenderUDP extends Thread {
      *  containing the end of file string
      */
     public void sendEOFPacket() throws SocketException, IOException, InterruptedException{
-        byte[] packetDataEOF = eof.getBytes();
+        byte[] packetDataEOF = {EOF};
         DatagramPacket eof = makePacket(packetDataEOF);
-        System.out.print("SENDER... Sending EOF to IP address " + internetAddress);
+        System.out.print("SENDER:: INFO: Sending EOF to IP address: " + targetAddress);
         System.out.print(" and port number " + receiverPortNumber + "\n");
         socket.send(eof);
     }
 
     /**
-     *  Method makePacket makes a packet
-     *  containing the length of the packet
-     *  as the first index and the sequence number
-     *  as the second index and
-     *  the data from the byte stream
-     *  following after (max total size is 128)
+     *  Method makePacket makes a packet containing the length of the packet
+     *  as the first index, the sequence number as the second index, and
+     *  the data from the byte stream following after (max total size is 128)
      *  @param data in the form of a byte array
      */
     public DatagramPacket makePacket(byte[] data){
         byte[] packetData = new byte[(data.length + 2)];
-        packetData[1] = (byte)currentSeq;
-        packetData[0] = (byte)packetData.length;
-        for(int i = 2; i < packetData.length; i++){
-            packetData[i] = data[i-2];
-        }
-        System.out.println("\n\nSENDER.. Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
-        DatagramPacket packet = new DatagramPacket(packetData, packetData.length, internetAddress, receiverPortNumber);
+        //packetData[0] = (byte)packetData.length;
+        packetData[0] = (byte)currentSeq;
+        System.arraycopy(data, 0, packetData, 1, data.length);
+ 
+        System.out.println("SENDER:: INFO: Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
+        DatagramPacket packet = new DatagramPacket(packetData, packetData.length, targetAddress, receiverPortNumber);
         return packet;
     }
 
@@ -135,7 +132,7 @@ public class SenderUDP extends Thread {
      */
     public void sendPacket(DatagramPacket packet) throws SocketException, IOException, InterruptedException{
        while(!receivedAck) {
-           System.out.println("SENDER... Sending packet '" + new String(packet.getData()) + "' to IP address " + internetAddress + " and port number " + receiverPortNumber);
+           System.out.println("SENDER... Sending packet '" + new String(packet.getData()) + "' to IP address " + targetAddress + " and port number " + receiverPortNumber);
            socket.send(packet);
            long tStart = System.currentTimeMillis();
            receiveAck(packet);
