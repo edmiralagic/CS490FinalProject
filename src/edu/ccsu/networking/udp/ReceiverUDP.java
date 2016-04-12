@@ -65,7 +65,7 @@ public class ReceiverUDP extends Thread {
             System.out.println("RECEIVER:: INFO: Packet received has the correct seq number!");
             return true;
         }
-        System.out.println("RECEIVER:: ERROR: Packet received has incorrect seq number!");
+        System.out.println("RECEIVER:: ERROR: Packet received has incorrect seq number! Expected: " + currentSeq + " Actual: " + seq);
         return false;
     }
 
@@ -89,7 +89,7 @@ public class ReceiverUDP extends Thread {
                 int packetSize = packet.getLength();
 
                 if(checkPacketSeq(packet)){
-                    System.out.println("RECEIVER:: SUCCESS: Received a packet with length: " + packetSize + " bytes.");
+                    System.out.println("RECEIVER:: INFO: Received a packet with length: " + packetSize + " bytes.");
                     
                     //Extract data from the packet and deliver it.
                     byte[] packetData = Arrays.copyOfRange(packet.getData(),1,packetSize);
@@ -111,7 +111,7 @@ public class ReceiverUDP extends Thread {
                     byte[] seq =  {(byte)(currentSeq ^ 1)};
                     DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
                     receivingSocket.send(ack);
-                    System.out.print("RECEIVER:: INFO: Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+                    System.out.print("RECEIVER:: INFO: Sending Ack " + (currentSeq^1) + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
                 }
             }
         }

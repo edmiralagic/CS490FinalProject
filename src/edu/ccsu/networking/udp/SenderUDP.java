@@ -171,16 +171,16 @@ public class SenderUDP extends Thread {
            try {
                System.out.println("SENDER:: INFO: Sending packet '" + new String(packet.getData()) + "' to IP address " + targetAddress + " and port number " + receiverPortNumber);
                socket.send(packet);
-               socket.setSoTimeout((int) timeout);
+               socket.setSoTimeout((int)timeout);
                long tStart = System.currentTimeMillis();
+               Thread.sleep(75);
                System.out.println("SENDER:: INFO: Set timeout to " + timeout + " ms");
                receiveAck(packet);
-               long tEnd = System.currentTimeMillis();
-               long rtt = tEnd - tStart;
+               long rtt = System.currentTimeMillis() - tStart;
                adjustTimeout(rtt);
                System.out.println("SENDER:: INFO: RTT calculated: " + rtt + "ms, timeout adjusted to " + timeout + " ms");
            }
-           catch(Exception e){
+           catch(SocketTimeoutException e){
                System.out.println("SENDER:: INFO: Socket timed out, sending packet again.");
                receivedAck = false;
            }
