@@ -50,7 +50,7 @@ public class SenderUDP extends Thread {
         socket = new DatagramSocket(senderPortNumber);
         }
         catch(SocketException se) {
-            System.out.println("SENDER:: ERROR: Sending socket was not opened.");
+            System.out.println("SENDER:: ERROR: Sender socket was not opened.");
         }
         this.targetAddress = InetAddress.getByAddress(targetAddress);
         this.receiverPortNumber = receiverPortNumber;
@@ -62,7 +62,7 @@ public class SenderUDP extends Thread {
      *  open
      */
     public void stopSender(){
-        if (socket!=null){
+        if (socket != null){
             System.out.println("SENDER:: STATUS: Closing the sender socket!");
             socket.close();
         }
@@ -80,9 +80,11 @@ public class SenderUDP extends Thread {
         int testSeq = (int)ack.getData()[0];
         System.out.println("SENDER:: INFO: Received Ack is " + testSeq + ", expected ack is " + currentSeq);
         if(testSeq == currentSeq){
-            currentSeq = currentSeq ^ 1;
+            System.out.println("SENDER:: INFO: Received Ack matches expected Ack!");
+            currentSeq = (currentSeq ^ 1);
             return true;
         }
+        System.out.println("SENDER:: ERROR: Received Ack does not match expected Ack.. Attempting to resend.");
         return false;
     }
 
@@ -99,14 +101,11 @@ public class SenderUDP extends Thread {
                 byte[] buf = new byte[16];
                 DatagramPacket ack = new DatagramPacket(buf, buf.length);
                 socket.receive(ack);
-                System.out.println("SENDER:: INFO: Recieved ACK with Sequence Number: " + (int)ack.getData()[0]);
                 if(checkAck(ack)){
-                    System.out.println("SENDER:: INFO: Received Ack checks out!");
                     receivedAck = true;
                 }
                 else {
                     receivedAck = false;
-                    System.out.println("SENDER:: STAUTS: Resending the packet!");
                     break;
                 }
             }
@@ -122,7 +121,7 @@ public class SenderUDP extends Thread {
      *  taking into consideration the old
      *  timeout value and the new currentRtt
      *  value
-     *  I/E dynamic timeout
+     *  I.E dynamic timeout
      *  @param currentRtt
      */
     public void adjustTimeout(long currentRtt){
@@ -153,7 +152,7 @@ public class SenderUDP extends Thread {
         packetData[0] = (byte)currentSeq;
         System.arraycopy(data,0,packetData,1,data.length);
  
-        System.out.println("\n\nSENDER:: INFO: Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
+        System.out.println("\n\nSENDER:: STATUS: Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
         DatagramPacket packet = new DatagramPacket(packetData, packetData.length, targetAddress, receiverPortNumber);
         return packet;
     }
@@ -168,17 +167,17 @@ public class SenderUDP extends Thread {
      */
     public void sendPacket(DatagramPacket packet) throws SocketException, IOException, InterruptedException{
        while(!receivedAck) {
-           System.out.println("SENDER:: INFO: Sending packet '" + new String(packet.getData()) + "' to IP address " + targetAddress + " and port number " + receiverPortNumber);
+           System.out.println("SENDER:: STATUS: Sending packet '" + new String(packet.getData()) + "' to IP address " + targetAddress + " and port number " + receiverPortNumber);
            socket.send(packet);
+           long tStart = System.currentTimeMillis();
            socket.setSoTimeout((int)timeout);
            //Thread.sleep(100);
-           long tStart = System.currentTimeMillis();
-           System.out.println("SENDER:: INFO: Set timeout to " + timeout + " ms");
+           System.out.println("SENDER:: STATUS: Set timeout to " + timeout + " ms");
            try {
                receiveAck(packet);
                long rtt = System.currentTimeMillis() - tStart;
                //adjustTimeout(rtt);
-               System.out.println("SENDER:: INFO: RTT calculated: " + rtt + "ms, timeout adjusted to " + timeout + " ms");
+               System.out.println("SENDER:: INFO: RTT calculated: " + rtt + "ms" /* + ", timeout adjusted to " + timeout + " ms"*/);
            }
            catch(SocketTimeoutException e){
                System.out.println("SENDER:: ERROR: Socket timed out, sending packet again.");

@@ -1,5 +1,4 @@
 package edu.ccsu.networking.udp;
-
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -12,6 +11,7 @@ import java.util.Arrays;
  *
  * @author Deepankar Malhan, Edmir Alagic, Ben Downs
  */
+
 public class ReceiverUDP extends Thread {
 
     private final int receiverPort;
@@ -31,7 +31,7 @@ public class ReceiverUDP extends Thread {
     public void stopListening() {
         if (receivingSocket != null) {
             receivingSocket.close();
-            System.out.println("RECEIVER:: INFO: Closing the receiver socket");
+            System.out.println("RECEIVER:: STATUS: Closing the receiver socket");
         }
     }
     
@@ -79,7 +79,7 @@ public class ReceiverUDP extends Thread {
             System.out.println("RECEIVER:: INFO: Socket created with port " + receiverPort);
 
             while(true){
-                System.out.println("RECEIVER:: INFO: Waiting for packet");
+                System.out.println("RECEIVER:: STATUS: Waiting for packet");
                 
                 //Create a buffer of 128 as the MTU is 128 bytes for this implementation. 
                 //Then receive a packet from the sender and check it's sequence #
@@ -88,10 +88,11 @@ public class ReceiverUDP extends Thread {
                 receivingSocket.receive(packet);
                 int packetSize = packet.getLength();
 
+                //If the received sequence number matches the currentSeq variable
                 if(checkPacketSeq(packet)){
                     System.out.println("RECEIVER:: INFO: Received a packet with length: " + packetSize + " bytes.");
                     
-                    //Extract data from the packet and deliver it.
+                    //Extract data from the packet and deliver it. (ignoring first index which is sequence num)
                     byte[] packetData = Arrays.copyOfRange(packet.getData(),1,packetSize);
                     deliverData(packetData);
                     
@@ -100,7 +101,7 @@ public class ReceiverUDP extends Thread {
                     DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
                     receivingSocket.send(ack);
                     
-                    System.out.println("RECEIVER:: INFO: Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+                    System.out.println("RECEIVER:: STATUS: Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
                     
                     //Change the sequence # from 0 to 1 or vice versa because the correct packet was delivered to receiver.
                     currentSeq = (currentSeq ^ 1);
@@ -111,7 +112,7 @@ public class ReceiverUDP extends Thread {
                     byte[] seq =  {(byte)(currentSeq ^ 1)};
                     DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
                     receivingSocket.send(ack);
-                    System.out.print("RECEIVER:: INFO: Sending Ack " + (currentSeq^1) + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+                    System.out.print("RECEIVER:: STATUS: Sending Ack " + (currentSeq^1) + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
                 }
             }
         }
