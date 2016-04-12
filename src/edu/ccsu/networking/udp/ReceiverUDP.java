@@ -17,16 +17,16 @@ public class ReceiverUDP extends Thread {
     private final int receiverPort;
     private DatagramSocket receivingSocket = null;
     private String dataString;
-    private int expectedSeqNum;
+    private int currentSeq;
 
     public ReceiverUDP(int port) {
         receiverPort = port;
         dataString = "";
-        expectedSeqNum = 0;
+        currentSeq = 0;
     }
     
     /**
-     * The final method called to close the receiver's Datagram socket.
+     *  The final method called to close the receiver's Datagram socket.
      */
     public void stopListening() {
         if (receivingSocket != null) {
@@ -36,19 +36,19 @@ public class ReceiverUDP extends Thread {
     }
     
     /**
-     * Delivers the data to either a String, or displays the final result and calls stopListening to stop listening
-     * for more data.
-     * @param data 
+     *  Delivers the data to either a String, or displays the final result and calls stopListening to stop listening
+     *  for more data.
+     *  @param data
      */
     public void deliverData(byte[] data) {
         /*0x24 is $ in hex. This value is being used as EOF for a bigger packet which will be delivered in
         multiple UDP datagrams.*/
         if(data[0] == 0x24){
-            System.out.println("\n\nFinal result: '" + dataString + "'");
+            System.out.println("\n\nFinal result: '" + dataString + "'\n\n");
             stopListening();
         }
         else {
-            System.out.println("RECEIVER:: SUCCESS: Delivered packet with: '" + new String(data) + "'");
+            System.out.println("RECEIVER:: INFO: Delivered packet with: '" + new String(data) + "'");
             dataString += new String(data);
         }
     }
@@ -56,12 +56,12 @@ public class ReceiverUDP extends Thread {
     /**
      *  Checks if the packet received has the correct sequence number
      * 
-     * @return boolean
+     *  @return boolean
      */
     public boolean checkPacketSeq(DatagramPacket packet){
         byte[] packetData = packet.getData();
         int seq = (int)packetData[0];
-        if(seq == expectedSeqNum){
+        if(seq == currentSeq){
             System.out.println("RECEIVER:: INFO: Packet received has the correct seq number!");
             return true;
         }
@@ -96,22 +96,22 @@ public class ReceiverUDP extends Thread {
                     deliverData(packetData);
                     
                     //Create a packet with the ACK, and send it back to the sender.
-                    byte[] seq =  {(byte)expectedSeqNum};
+                    byte[] seq =  {(byte)currentSeq};
                     DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
                     receivingSocket.send(ack);
                     
-                    System.out.println("RECEIVER:: INFO: Sending Ack " + expectedSeqNum + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+                    System.out.println("RECEIVER:: INFO: Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
                     
                     //Change the sequence # from 0 to 1 or vice versa because the correct packet was delivered to receiver.
-                    expectedSeqNum = (expectedSeqNum ^ 1);
+                    currentSeq = (currentSeq ^ 1);
                 }
                 else{
                     //Not changing the expected seq #, this code creates a ACK of opposite # than expected #, and 
                     //sends it to the sender.
-                    byte[] seq =  {(byte)(expectedSeqNum ^ 1)};
+                    byte[] seq =  {(byte)(currentSeq ^ 1)};
                     DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
                     receivingSocket.send(ack);
-                    System.out.print("RECEIVER:: INFO: Sending Ack " + expectedSeqNum + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+                    System.out.print("RECEIVER:: INFO: Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
                 }
             }
         }

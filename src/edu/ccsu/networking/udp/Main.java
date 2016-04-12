@@ -34,11 +34,11 @@ public class Main {
             System.out.println("Please enter a message you want to send: ");
             String data = scan.nextLine();
 
-                // Send the data
-                sender.rdtSend(data.getBytes(Charset.forName("UTF-8")));
+            // Send the data
+            sender.rdtSend(data.getBytes(Charset.forName("UTF-8")));
 
-                // Sleeping simply for demo visualization purposes
-                Thread.sleep(10000);  
+            // Sleeping simply for demo visualization purposes
+            Thread.sleep(10000);
 
         }catch(Exception e){
             e.printStackTrace();
