@@ -8,26 +8,39 @@ import java.util.Arrays;
 
 public class SenderUDP extends Thread {
 
-    private int receiverPortNumber = 0;
-    private int portNumber = 0;
-    private DatagramSocket socket = null;
-    private InetAddress targetAddress = null;
     private final byte EOF = 0x24;
-    private int currentSeq = 0;
-    private boolean receivedAck = false;
+    private int receiverPortNumber;
+    private int senderPortNumber;
+    private DatagramSocket socket;
+    private InetAddress targetAddress;
+    private int currentSeq;
+    private boolean receivedAck;
 
     public SenderUDP(int portNumber) {
-        this.portNumber = portNumber;
+        this.senderPortNumber = portNumber;
+        receiverPortNumber = 0;
+        socket = null;
+        targetAddress = null;
+        currentSeq = 0;
+        receivedAck = false;
     }
 
     /**
-     *  Creates a new socket with the
-     *  specified port number for the sender
-     *  the internet address and receiver
-     *  port number are for the target client
+     *  Creates a new socket with the specified port number for the sender.
+     *  The IP address and receiver port number are for the target client.
+     * 
+     * @param targetAddress
+     * @param receiverPortNumber
+     * @throws java.net.SocketException
+     * @throws java.net.UnknownHostException
      */
     public void startSender(byte[] targetAddress, int receiverPortNumber) throws SocketException, UnknownHostException {
-        socket = new DatagramSocket(portNumber);
+        try{
+        socket = new DatagramSocket(senderPortNumber);
+        }
+        catch(SocketException se) {
+            System.out.println("SENDER:: ERROR: Sending socket was not opened.");
+        }
         this.targetAddress = InetAddress.getByAddress(targetAddress);
         this.receiverPortNumber = receiverPortNumber;
     }

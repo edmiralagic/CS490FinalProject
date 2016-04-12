@@ -16,11 +16,13 @@ public class ReceiverUDP extends Thread {
 
     private final int receiverPort;
     private DatagramSocket receivingSocket = null;
-    private String dataString = "";
-    private int currentSeq = 0;
+    private String dataString;
+    private int expectedSeqNum;
 
     public ReceiverUDP(int port) {
         receiverPort = port;
+        dataString = "";
+        expectedSeqNum = 0;
     }
     
     /**
@@ -59,11 +61,11 @@ public class ReceiverUDP extends Thread {
     public boolean checkPacketSeq(DatagramPacket packet){
         byte[] packetData = packet.getData();
         int seq = (int)packetData[0];
-        if(seq == currentSeq){
+        if(seq == expectedSeqNum){
             System.out.println("RECEIVER:: INFO: Packet received has the correct seq number!");
             return true;
         }
-        System.out.println("RECEIVER:: ERROR: Packet received has incorrect seq number, waiting for the right one.");
+        System.out.println("RECEIVER:: ERROR: Packet received has incorrect seq number!");
         return false;
     }
 
@@ -74,36 +76,47 @@ public class ReceiverUDP extends Thread {
     public void run() {
         try {
             receivingSocket = new DatagramSocket(receiverPort);
-            System.out.println("RECEIVER.. Socket created with port " + receiverPort);
+            System.out.println("RECEIVER:: INFO: Socket created with port " + receiverPort);
 
             while(true){
-                System.out.println("RECEIVER... waiting for packet");
-
+                System.out.println("RECEIVER:: INFO: Waiting for packet");
+                
+                //Create a buffer of 128 as the MTU is 128 bytes for this implementation. 
+                //Then receive a packet from the sender and check it's sequence #
                 byte[] buf = new byte[128];
                 DatagramPacket packet = new DatagramPacket(buf, buf.length);
                 receivingSocket.receive(packet);
                 int packetSize = packet.getLength();
 
                 if(checkPacketSeq(packet)){
-                    System.out.println("RECEIVER... Received a packet with length: " + packetSize + " bytes.");
+                    System.out.println("RECEIVER:: SUCCESS: Received a packet with length: " + packetSize + " bytes.");
+                    
+                    //Extract data from the packet and deliver it.
                     byte[] packetData = Arrays.copyOfRange(packet.getData(),1,packetSize);
                     deliverData(packetData);
-                    byte[] seq =  {(byte)currentSeq};
+                    
+                    //Create a packet with the ACK, and send it back to the sender.
+                    byte[] seq =  {(byte)expectedSeqNum};
                     DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
                     receivingSocket.send(ack);
-                    System.out.println("RECEIVER... Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
-                    currentSeq = (currentSeq ^ 1);
+                    
+                    System.out.println("RECEIVER:: INFO: Sending Ack " + expectedSeqNum + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+                    
+                    //Change the sequence # from 0 to 1 or vice versa because the correct packet was delivered to receiver.
+                    expectedSeqNum = (expectedSeqNum ^ 1);
                 }
                 else{
-                    byte[] seq =  {(byte)(currentSeq ^ 1)};
+                    //Not changing the expected seq #, this code creates a ACK of opposite # than expected #, and 
+                    //sends it to the sender.
+                    byte[] seq =  {(byte)(expectedSeqNum ^ 1)};
                     DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
                     receivingSocket.send(ack);
-                    System.out.print("RECEIVER... Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+                    System.out.print("RECEIVER:: INFO: Sending Ack " + expectedSeqNum + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
                 }
             }
         }
         catch (Exception e) {
-            //stopListening();
+            System.out.println("RECEIVER:: EXCEPTION: Exception occured at the receiver side!");
         }
     }
 }
