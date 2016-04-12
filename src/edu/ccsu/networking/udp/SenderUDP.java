@@ -1,16 +1,11 @@
 package edu.ccsu.networking.udp;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.*;
 import java.util.Arrays;
 
-/**
- * Simple sender, takes passed data breaks it into packets and sends them
- * to the receiver
- * @author Chad Williams
- */
-public class RDT10Sender extends Thread {
+
+public class SenderUDP extends Thread {
 
     private int receiverPortNumber = 0;
     private int portNumber = 0;
@@ -20,19 +15,30 @@ public class RDT10Sender extends Thread {
     private int currentSeq = 0;
     private boolean receivedAck = false;
 
-    public RDT10Sender(int portNumber) {
+    public SenderUDP(int portNumber) {
         this.portNumber = portNumber;
     }
 
+    /**
+     *  Creates a new socket with the
+     *  specified port number for the sender
+     *  the internet address and receiver
+     *  port number are for the target client
+     */
     public void startSender(byte[] targetAddress, int receiverPortNumber) throws SocketException, UnknownHostException {
         socket = new DatagramSocket(portNumber);
         internetAddress = InetAddress.getByAddress(targetAddress);
         this.receiverPortNumber = receiverPortNumber;
     }
-    
+
+    /**
+     *  Method checkAck compares
+     *  Closes the socket if it is
+     *  open
+     */
     public void stopSender(){
         if (socket!=null){
-            System.out.println("SENDER... Done sending!");
+            System.out.println("SENDER... Closing the sender socket!");
             socket.close();
         }
     }
@@ -47,7 +53,7 @@ public class RDT10Sender extends Thread {
      */
     public boolean checkAck(DatagramPacket ack){
         int testSeq = (int)ack.getData()[0];
-        System.out.println("SENDER... Recieved Ack is " + testSeq + ", expected ack is " + currentSeq);
+        System.out.println("SENDER... Received Ack is " + testSeq + ", expected ack is " + currentSeq);
         if(testSeq == currentSeq){
             currentSeq = currentSeq ^ 1;
             return true;
@@ -105,6 +111,7 @@ public class RDT10Sender extends Thread {
      *  as the second index and
      *  the data from the byte stream
      *  following after (max total size is 128)
+     *  @param data in the form of a byte array
      */
     public DatagramPacket makePacket(byte[] data){
         byte[] packetData = new byte[(data.length + 2)];
@@ -113,11 +120,19 @@ public class RDT10Sender extends Thread {
         for(int i = 2; i < packetData.length; i++){
             packetData[i] = data[i-2];
         }
-        System.out.println("SENDER.. Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
+        System.out.println("\n\nSENDER.. Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
         DatagramPacket packet = new DatagramPacket(packetData, packetData.length, internetAddress, receiverPortNumber);
         return packet;
     }
 
+    /**
+     *  Method sendPacket
+     *  Sends the packet,
+     *  starts the RTT timer,
+     *  then calls the receiveAck method
+     *  and once its received, ends the timer
+     *  @param  packet
+     */
     public void sendPacket(DatagramPacket packet) throws SocketException, IOException, InterruptedException{
        while(!receivedAck) {
            System.out.println("SENDER... Sending packet '" + new String(packet.getData()) + "' to IP address " + internetAddress + " and port number " + receiverPortNumber);
@@ -126,9 +141,25 @@ public class RDT10Sender extends Thread {
            receiveAck(packet);
            long tEnd = System.currentTimeMillis();
            long rtt = tEnd - tStart;
-           System.out.println("SENDER... RTT calculated: " + rtt + "ms" + "\n\n");
+           System.out.println("SENDER... RTT calculated: " + rtt + "ms");
        }
         receivedAck = false;
+    }
+
+    /**
+     *  Receive data and turn it into an
+     *  array of bytes that will be used to create
+     *  a packet
+     *  @param byteStream from above (data from above)
+     */
+    public byte[] makePacketData(ByteArrayInputStream byteStream) throws SocketException, IOException, InterruptedException{
+        byte[] packetData = new byte[126];
+        int bytesRead = byteStream.read(packetData);
+        //THIS DIRECTLY ABOVE AND BELOW MUST STAY, VERY IMPORTANT
+        if (bytesRead<packetData.length){
+            packetData = Arrays.copyOf(packetData, bytesRead);
+        }
+        return packetData;
     }
     
     /**
@@ -139,26 +170,26 @@ public class RDT10Sender extends Thread {
     public void rdtSend(byte[] data) throws SocketException, IOException, InterruptedException {
 
         ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-        boolean sent = true;
+        boolean sent = false;
 
         while (byteStream.available()>0){
-            byte[] packetData = new byte[126];
-            int bytesRead = byteStream.read(packetData);
-            //THIS DIRECTLY ABOVE AND BELOW MUST STAY, VERY IMPORTANT
-            if (bytesRead<packetData.length){
-                packetData = Arrays.copyOf(packetData, bytesRead);
-            }
-//            while(sent) {
-//                sent = false;
-//                try {
+            byte[] packetData = makePacketData(byteStream);
+
+            while(!sent) {
+                try {
                     DatagramPacket packet = makePacket(packetData);
                     sendPacket(packet);
-//                    socket.setSoTimeout(2000);
-//                } catch (SocketException e) {
-//                    sent = true;
-//                }
-//            }
-            // Minor pause for easier visualization only
+                    socket.setSoTimeout(1);
+                    sent = true;
+                    System.out.println("SENDER... Received ack before the timeout, nice!");
+                } catch (SocketException e) {
+                    sent = false;
+                    System.out.println("SENDER... Socket timed out, sending packet again.");
+                }
+            }
+            sent = false;
+
+
             Thread.sleep(1200);
         }
 
