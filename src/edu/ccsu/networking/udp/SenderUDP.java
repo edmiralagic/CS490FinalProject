@@ -68,6 +68,10 @@ public class SenderUDP extends Thread {
         }
     }
 
+    public void setSenderPort(int port){
+        this.senderPortNumber = port;
+    }
+
     /**
      *  Method checkAck compares
      *  the first index (index = 0) of the
@@ -225,4 +229,5 @@ public class SenderUDP extends Thread {
         sendEOFPacket();
         stopSender();
     }
+
 }
