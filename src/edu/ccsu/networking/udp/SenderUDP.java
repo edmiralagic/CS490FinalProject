@@ -105,12 +105,11 @@ public class SenderUDP extends Thread {
                 byte[] buf = new byte[16];
                 DatagramPacket ack = new DatagramPacket(buf, buf.length);
                 socket.receive(ack);
-<<<<<<< HEAD
-=======
+
                  targetAddress = ack.getAddress();
                 System.out.println("SENDER:: INFO: Recieved ACK with Sequence Number: " + (int)ack.getData()[0]);
                 System.out.println("SENDER:: INFO: Received ACK from: " + targetAddress + ", port #: " + receiverPortNumber);
->>>>>>> ab4ecd89246808326553fcecbc518211ec9cf468
+                
                 if(checkAck(ack)){
                     receivedAck = true;
                 }
