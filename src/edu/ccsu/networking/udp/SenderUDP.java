@@ -25,9 +25,9 @@ public class SenderUDP extends Thread {
     private int currentSeq;
     private boolean receivedAck;
     private long timeout;
+    private boolean slowMode = false;
 
-    public SenderUDP(int portNumber) {
-        this.senderPortNumber = portNumber;
+    public SenderUDP() {
         receiverPortNumber = 0;
         socket = null;
         targetAddress = null;
@@ -54,6 +54,26 @@ public class SenderUDP extends Thread {
         }
         this.targetAddress = InetAddress.getByAddress(targetAddress);
         this.receiverPortNumber = receiverPortNumber;
+    }
+
+    public void setTargetIP(InetAddress targetIP){
+        this.targetAddress = targetIP;
+        System.out.println("SENDER:: INFO: Target IP address set to " + this.targetAddress.toString());
+    }
+
+    public void setTargetPort(int port){
+        this.receiverPortNumber = port;
+        System.out.println("SENDER:: INFO: Target Port Number set to " + this.receiverPortNumber);
+    }
+
+    public void setPortNum(int port){
+        this.senderPortNumber = port;
+        System.out.println("SENDER:: INFO: Port number set to " + this.senderPortNumber);
+    }
+
+    public void setSlowMode(boolean slow){
+        this.slowMode = slow;
+        System.out.println("SENDER:: INFO: Slow Mode set to " + this.slowMode);
     }
 
     /**

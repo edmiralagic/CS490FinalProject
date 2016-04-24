@@ -14,13 +14,13 @@ import java.util.Arrays;
 
 public class ReceiverUDP extends Thread {
 
-    private final int receiverPort;
+    private int receiverPort;
     private DatagramSocket receivingSocket = null;
     private String dataString;
     private int currentSeq;
+    private boolean slowMode = false;
 
-    public ReceiverUDP(int port) {
-        receiverPort = port;
+    public ReceiverUDP() {
         dataString = "";
         currentSeq = 0;
     }
@@ -33,6 +33,16 @@ public class ReceiverUDP extends Thread {
             receivingSocket.close();
             System.out.println("RECEIVER:: STATUS: Closing the receiver socket");
         }
+    }
+
+    public void setPortNum(int port){
+        this.receiverPort = port;
+        System.out.println("RECEIVER:: INFO: Port number set to " + this.receiverPort);
+    }
+
+    public void setSlowMode(boolean slow){
+        this.slowMode = slow;
+        System.out.println("RECEIVER:: INFO: Slow mode set to " + this.slowMode);
     }
     
     /**
