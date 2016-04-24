@@ -1,5 +1,6 @@
-package edu.ccsu.networking.udp;
+package edu.ccsu.networking.gui;
 
+import edu.ccsu.networking.udp.SenderUDP;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -93,7 +94,7 @@ public class SenderGUI extends JFrame {
     }
 
 
-    SenderGUI() {
+    public SenderGUI() {
         super("Welcome to NapsterLITE [C]");
 
         this.setLocation(250,250);
