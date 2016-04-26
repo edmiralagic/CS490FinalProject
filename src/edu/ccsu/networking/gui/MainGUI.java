@@ -13,8 +13,7 @@ public class MainGUI extends JFrame {
 
 
     public static void main(String[] args) throws Exception{
-        MainGUI frame = new MainGUI();
-
+       // MainGUI frame = new MainGUI();
     }
 
     JPanel client_panel = new JPanel();

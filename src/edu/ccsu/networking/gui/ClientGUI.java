@@ -1,5 +1,6 @@
 package edu.ccsu.networking.gui;
 
+import edu.ccsu.networking.main.Client;
 import edu.ccsu.networking.udp.SenderUDP;
 import javax.swing.*;
 import java.awt.*;
@@ -21,7 +22,7 @@ public class ClientGUI extends JFrame {
 
     }
 
-    SenderUDP sender = new SenderUDP();
+    Client client = new Client();
 
     JPanel local_panel = new JPanel();
     JPanel search_panel = new JPanel();
@@ -30,15 +31,13 @@ public class ClientGUI extends JFrame {
     JPanel local_button_panel = new JPanel();
     JPanel search_button_panel = new JPanel();
 
-    private int targetPortNum;
-    private int portNum;
-    private InetAddress targetIP;
-
     private String[] localColumns = {"Filename", "Size", "Location"};
     private String[] searchColumns = {"Filename", "Size"};
 
     private String[][] localData = new String[][] {};
     private String[][] searchData = new String[][] {};
+
+    private String localFiles = "";
 
     DefaultTableModel localTableModel = new DefaultTableModel(localData, localColumns);
     DefaultTableModel searchTableModel = new DefaultTableModel(searchData, searchColumns);
@@ -46,12 +45,16 @@ public class ClientGUI extends JFrame {
     DefaultTableModel tempTableModel = new DefaultTableModel(searchData, searchColumns);
     JTextField search_field = new JTextField();
 
+    JTable localTable = new JTable(localTableModel);
+    JTable searchTable = new JTable(searchedTableModel);
+
     Container c = getContentPane();
 
     JButton share_button = new JButton("Share");
-    JButton select_button = new JButton("Select");
+    JButton add_button = new JButton("Add");
+    JButton remove_button = new JButton("Remove");
 
-    JButton refresh_button = new JButton("Refresh");
+    JButton search_button = new JButton("Search");
     JButton dwnld_button = new JButton("Download");
 
     JCheckBox slowMode = new JCheckBox("Slow");
@@ -65,6 +68,19 @@ public class ClientGUI extends JFrame {
         localTableModel.addRow(tempData);
         localTableModel.fireTableDataChanged();
 
+        constrLocalString();
+    }
+
+    public void updateTables(){
+        localTableModel.fireTableDataChanged();
+        searchedTableModel.fireTableDataChanged();
+    }
+
+    public void constrLocalString(){
+        localFiles = "";
+        for(int r = 0; r < localTableModel.getRowCount(); r++){
+            localFiles += localTableModel.getValueAt(r,0) + "#" + localTableModel.getValueAt(r,1) + "?";
+        }
     }
 
     public void updateTableModel(DefaultTableModel oldTableModel, DefaultTableModel newTableModel){
@@ -103,34 +119,24 @@ public class ClientGUI extends JFrame {
         searchedTableModel.fireTableDataChanged();
     }
 
-
     public ClientGUI(String targetIP, String targetPort, String clientPort){
         super("Welcome to NapsterLITE [C]");
 
-        try {
-            this.targetIP = Inet4Address.getByName(targetIP);
+        try{
+            client.startSenderUDP(targetIP, targetPort, clientPort);
         }
         catch(Exception e){
-            System.out.println("GUI:: ERROR: Failed to convert Target IP address (client side).");
+            System.out.println("GUI:: ERROR: Failed to start SenderUDP (client side).");
         }
-
-        this.targetPortNum = Integer.parseInt(targetPort);
-        this.portNum = Integer.parseInt(clientPort);
-
-        sender.setTargetIP(this.targetIP);
-        sender.setTargetPort(this.targetPortNum);
-        sender.setPortNum(this.portNum);
 
         this.setLocation(250,250);
         this.setDefaultLookAndFeelDecorated(true);
         BorderLayout bl = new BorderLayout();
         this.setLayout(bl);
 
-        JTable localTable = new JTable(localTableModel);
-        JTable searchTable = new JTable(searchedTableModel);
-
         local_button_panel.setLayout(new BoxLayout(local_button_panel, BoxLayout.LINE_AXIS));
-        local_button_panel.add(select_button);
+        local_button_panel.add(remove_button);
+        local_button_panel.add(add_button);
         local_button_panel.add(share_button);
 
         local_panel.setLayout(new BoxLayout(local_panel, BoxLayout.PAGE_AXIS));
@@ -139,7 +145,7 @@ public class ClientGUI extends JFrame {
         local_panel.add(local_button_panel);
 
         search_button_panel.setLayout(new BoxLayout(search_button_panel, BoxLayout.LINE_AXIS));
-        search_button_panel.add(refresh_button);
+        search_button_panel.add(search_button);
         search_button_panel.add(dwnld_button);
 
         search_panel.setLayout(new BoxLayout(search_panel, BoxLayout.PAGE_AXIS));
@@ -156,8 +162,11 @@ public class ClientGUI extends JFrame {
         this.add(local_panel, BorderLayout.WEST);
         this.add(search_panel, BorderLayout.EAST);
 
-        this.selectButtonAction();
+        this.addButtonAction();
         this.searchButtonAction();
+        this.removeButtonAction();
+        this.shareButtonAction();
+        this.dwnldButtonAction();
         this.slowModeAction();
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
@@ -167,28 +176,101 @@ public class ClientGUI extends JFrame {
 
     public void slowModeAction(){
         slowMode.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if(slowMode.isSelected()){
+                    client.setSenderSlow(true);
+                }
+                else{
+                    client.setSenderSlow(false);
+                }
+            }
+        });
+    }
+
+    public void searchButtonAction(){
+        search_button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                String keyword = search_field.getText();
+                if(keyword.isEmpty()){
+                    System.out.println("GUI:: ERROR: Please enter a keyword to search for (client side).");
+                }
+                else{
+                    try {
+                        client.clientSearchReq(keyword);
+                        System.out.println("GUI:: INFO: Search request sent for keyword: " + keyword + " (client side).");
+                    }
+                    catch(Exception ec){
+                        System.out.println("GUI:: ERROR: Search request failed to send (client side).");
+                    }
+                }
+            }
+        });
+    }
+
+    public void removeButtonAction(){
+        remove_button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                int row = localTable.getSelectedRow();
+                if(row == -1) {
+                    System.out.println("GUI:: ERROR: You must select a file before you click the remove button (client side).");
+                }
+                else {
+                    localTableModel.removeRow(row);
+                    localTableModel.fireTableDataChanged();
+                    constrLocalString();
+                }
+            }
+        });
+    }
+
+    public void dwnldButtonAction(){
+        dwnld_button.addActionListener(new ActionListener() {
            public void actionPerformed(ActionEvent e) {
-               if(slowMode.isSelected()){
-                   sender.setSlowMode(true);
+               int row = searchTable.getSelectedRow();
+               if(row == -1)
+               {
+                   System.out.println("GUI:: ERROR: You must select a file before you click the download button (client side).");
                }
-               else{
-                   sender.setSlowMode(false);
+               else
+               {
+                   String fileName = (searchTable.getModel().getValueAt(row, 0).toString());
+                   String fileSize = (searchTable.getModel().getValueAt(row, 1).toString());
+                   String fileReq = fileName + "#" + fileSize + "?";
+                   try {
+                       client.clientDownloadReq(fileReq);
+                       System.out.println("GUI:: INFO: Download request sent for File name: " + fileName + " and File size: " + fileSize + " bytes (client side).");
+                   }
+                   catch(Exception eb){
+                       System.out.println("GUI:: ERROR: Client download request failed (client side).");
+                   }
+
                }
            }
        });
     }
 
-    public void searchButtonAction(){
-        search_field.addActionListener(new ActionListener() {
+    public void shareButtonAction(){
+        share_button.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                String search = search_field.getText();
-                getResults(search);
+                if(localTableModel.getRowCount() == 0){
+                    System.out.println("GUI:: ERROR: You must select some files before you can share anything (client side).");
+                }
+                else{
+                    System.out.println(localFiles);
+                    //send string of files from table
+                    try {
+                        client.informAndUpdate(localFiles);
+                    }
+                    catch(Exception ea){
+                        System.out.println("GUI:: ERROR: Could not send inform and update message (client side).");
+                    }
+                }
             }
         });
     }
 
-    public void selectButtonAction(){
-        select_button.addActionListener(new ActionListener()
+    public void addButtonAction(){
+        add_button.addActionListener(new ActionListener()
         {
             public void actionPerformed(ActionEvent ae)
             {

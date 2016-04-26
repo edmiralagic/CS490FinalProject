@@ -17,7 +17,6 @@ public class ServerGUI extends JFrame {
 
     public static void main(String[] args) throws Exception{
         //ClientGUI frame = new ClientGUI();
-
     }
 
     ReceiverUDP receiverThread = new ReceiverUDP();

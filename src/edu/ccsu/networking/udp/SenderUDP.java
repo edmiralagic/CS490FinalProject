@@ -3,6 +3,7 @@ package edu.ccsu.networking.udp;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.*;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
@@ -25,7 +26,9 @@ public class SenderUDP extends Thread {
     private int currentSeq;
     private boolean receivedAck;
     private long timeout;
-    private boolean slowMode = false;
+    private boolean slowMode;
+    private int method;
+    private int flag;
 
     public SenderUDP() {
         receiverPortNumber = 0;
@@ -34,26 +37,26 @@ public class SenderUDP extends Thread {
         currentSeq = 0;
         timeout = 100; //initial timeout set to 100
         receivedAck = false;
+        slowMode = false;
+        method = 0;
+        flag = 1;
     }
 
     /**
      *  Creates a new socket with the specified port number for the sender.
      *  The IP address and receiver port number are for the target client.
-     * 
-     * @param targetAddress
-     * @param receiverPortNumber
+     *
      * @throws java.net.SocketException
      * @throws java.net.UnknownHostException
      */
-    public void startSender(byte[] targetAddress, int receiverPortNumber) throws SocketException, UnknownHostException {
+    public void startSender() throws SocketException, UnknownHostException {
         try{
-        socket = new DatagramSocket(senderPortNumber);
+            socket = new DatagramSocket(senderPortNumber);
+            System.out.println("SENDER:: INFO: Socket opened with port number: " + senderPortNumber);
         }
         catch(SocketException se) {
             System.out.println("SENDER:: ERROR: Sender socket was not opened.");
         }
-        this.targetAddress = InetAddress.getByAddress(targetAddress);
-        this.receiverPortNumber = receiverPortNumber;
     }
 
     public void setTargetIP(InetAddress targetIP){
@@ -176,10 +179,11 @@ public class SenderUDP extends Thread {
      *  @param data in the form of a byte array
      */
     public DatagramPacket makePacket(byte[] data){
-        byte[] packetData = new byte[(data.length + 1)];
-        //packetData[0] = (byte)packetData.length;
+        byte[] packetData = new byte[(data.length + 3)];
         packetData[0] = (byte)currentSeq;
-        System.arraycopy(data,0,packetData,1,data.length);
+        packetData[1] = (byte)flag;
+        packetData[2] = (byte)method;
+        System.arraycopy(data,0,packetData,3,data.length);
  
         System.out.println("\n\nSENDER:: STATUS: Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
         DatagramPacket packet = new DatagramPacket(packetData, packetData.length, targetAddress, receiverPortNumber);
@@ -223,12 +227,14 @@ public class SenderUDP extends Thread {
      *  @param byteStream from above (data from above)
      */
     public byte[] makePacketData(ByteArrayInputStream byteStream) throws SocketException, IOException, InterruptedException{
-        byte[] packetData = new byte[127];
+        byte[] packetData = new byte[125];
         int bytesRead = byteStream.read(packetData);
         //THIS DIRECTLY ABOVE AND BELOW MUST STAY, VERY IMPORTANT
         if (bytesRead<packetData.length){
+            flag = 0; //end of file
             packetData = Arrays.copyOf(packetData, bytesRead);
         }
+        System.out.println("SENDER:: INFO: Packet data created: " + new String(packetData));
         return packetData;
     }
     
@@ -239,18 +245,31 @@ public class SenderUDP extends Thread {
      */
     public void rdtSend(byte[] data) throws SocketException, IOException, InterruptedException {
 
-        ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
+        method = data[0]; //save the method and take it out of the array of bytes
+        System.out.println("SENDER:: INFO: Saved method number as " + method + " .");
+
+        byte[] newData = new byte[data.length-1];
+        try {
+            System.arraycopy(data,1,newData,0,data.length-1);
+        }
+        catch(Exception e){
+            System.out.println(e);
+            System.exit(0);
+        }
+        System.out.println("hello");
+        ByteArrayInputStream byteStream = new ByteArrayInputStream(newData);
+        System.out.println("SENDER:: INFO: The total length of the data within this message is " + newData.length + " bytes.");
 
         while (byteStream.available() > 0){
             byte[] packetData = makePacketData(byteStream);
-
             DatagramPacket packet = makePacket(packetData);
             sendPacket(packet);
 
             Thread.sleep(1200);
         }
 
-        sendEOFPacket();
+        flag = 1; //reset the flag after the whole message is sent
+
         stopSender();
     }
 
