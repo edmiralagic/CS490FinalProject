@@ -240,7 +240,6 @@ public class SenderUDP extends Thread {
     public void rdtSend(byte[] data) throws SocketException, IOException, InterruptedException {
 
         ByteArrayInputStream byteStream = new ByteArrayInputStream(data);
-        boolean sent = false;
 
         while (byteStream.available() > 0){
             byte[] packetData = makePacketData(byteStream);
