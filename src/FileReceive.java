@@ -7,7 +7,7 @@ import java.net.*;
 	 {
 		 try
 		 {
-			 Socket socket = new Socket("127.0.0.1", 50000);
+			 Socket socket = new Socket("198.168.1.2", 50000);
 			 
 			 //read and write on socket
 			 PrintWriter out = new PrintWriter(socket.getOutputStream());
@@ -32,7 +32,7 @@ import java.net.*;
 			 //file receive process, independent
 			 try
 			 {
-				 BufferedWriter pw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("C:\\Users\\Benjamin\\workspace\\TCPFileSend\\src\\Received.txt")));
+				 BufferedWriter pw = new BufferedWriter(new OutputStreamWriter(new FileOutputStream("C:\\Users\\deepa\\workspace\\TCPFileSend\\src\\Received.txt")));
 				 
 				 while ((s=br.readLine()) != null)
 				 {

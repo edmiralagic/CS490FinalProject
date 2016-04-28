@@ -22,13 +22,14 @@ class FileSend
 			System.out.println("Client connected.");
 			
 			//Read and write on socket
-			PrintWriter pw = new PrintWriter (new OutputStreamWriter(socket.getOutputStream()));
+			DataOutputStream pw = new DataOutputStream (socket.getOutputStream());
 			BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			
 			//send file list
-			String dirname = "C:\\Users\\Benjamin\\workspace\\TCPFileSend\\src\\text.txt";
+			String dirname = "C:\\Users\\deepa\\Documents\\Deepankar\\CCSU\\Semester 4\\CS 490-01";
 			File f1 = new File(dirname);
 			File fl[] = f1.listFiles();
+                       
 			
 			//Sort Alphabetically
 			Arrays.sort(fl);
@@ -39,23 +40,25 @@ class FileSend
 			
 			for (int i = 0; i<fl.length; i++)
 			{
-				if(fl[i].canRead() && (fl[i].toString()).endsWith(".txt"))
+				if(fl[i].canRead())
 				{
 					c++;
+                                        System.out.println(fl[i].toString() + " at index: " + i);
 				}
+                                else {
+                                    System.out.println("Can't read one file!");
+                                }
 			}
 			
-			pw.println(" " + c + " .txt files found, listed A-Z.");
-			
+			pw.writeBytes(" " + c + " files found, listed A-Z.\n");
+                        
+                     
 			for (int i=0; i<fl.length; i++)
 			{
-				if((fl[i].toString()).endsWith(".txt"))
-				{
-					pw.println(" " + fl[i].getName() + " " + fl[i].length() + " Bytes");					
-				}
+                            pw.writeBytes(" " + fl[i].getName() + " " + fl[i].length() + " Bytes\n");
 			}
 				//output string stream delimiter
-				pw.println("~");
+				pw.writeBytes("~");
 				pw.flush();
 				
 				//convert ASCII to decimal value
@@ -63,11 +66,10 @@ class FileSend
 				int temp = Integer.parseInt(tem);
 				temp -=48;
 				System.out.println("Index: " + temp);
-				
+//				
 				//Check if the file exists
 				boolean flis = false;
 				int index = 0;
-				
 				if (temp >=0 && temp <= fl.length)
 				{
 					flis = true;
@@ -84,23 +86,25 @@ class FileSend
 					try
 					{
 						//file send process, independent
-						File ff = new File(fl[index].getAbsolutePath());
-						FileReader fr = new FileReader(ff);
-						BufferedReader brf = new BufferedReader(fr);
-						String s;
+						File fileToSend = new File(fl[index].getAbsolutePath());
+//						FileReader fr = new FileReader(fileToSend);
+//						BufferedReader brf = new BufferedReader(fr);
+                                                FileInputStream fileToSendIStream = new FileInputStream(fileToSend);
+                                                byte[] byteArray = new byte[(int)fileToSend.length()];
+                                                System.out.println(fileToSendIStream.available()  + " length of the array: " + byteArray.length);
+
+						fileToSendIStream.read(byteArray);
+                                                System.out.println(fileToSendIStream.available());
 						
-						while ((s = brf.readLine())!= null)
-						{
-							pw.println(s);
-						}
+						pw.flush();
+                                                //pw.write(byteArray, 0, byteArray.length);
+						for(int i = 0;i < byteArray.length; i ++) {
+                                                    pw.write((int)byteArray[i]);
+                                                }
 						
 						//force write buffer to client
 						pw.flush();
 						
-						if (brf.readLine() == null)
-						{
-							System.out.println("File Read successful.  Closing socket.");
-						}
 					}
 					catch (IOException ioe)
 					{
