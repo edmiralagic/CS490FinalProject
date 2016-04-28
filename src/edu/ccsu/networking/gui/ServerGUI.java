@@ -1,5 +1,6 @@
 package edu.ccsu.networking.gui;
 
+import edu.ccsu.networking.main.Server;
 import edu.ccsu.networking.udp.ReceiverUDP;
 import javax.swing.*;
 import java.awt.*;
@@ -19,7 +20,9 @@ public class ServerGUI extends JFrame {
         //ClientGUI frame = new ClientGUI();
     }
 
-    ReceiverUDP receiverThread = new ReceiverUDP();
+    //ReceiverUDP receiverThread = new ReceiverUDP();
+
+    Server server = new Server();
 
     JPanel table_panel = new JPanel();
     JPanel clients_panel = new JPanel();
@@ -27,7 +30,6 @@ public class ServerGUI extends JFrame {
     JPanel slow_clients_panel = new JPanel();
 
     private int portNum;
-
 
     private String[] tableColumns = {"Filename", "Size", "IP Address", "Port Number"};
 
@@ -81,8 +83,10 @@ public class ServerGUI extends JFrame {
 
         this.portNum = Integer.parseInt(portNumber);
 
-        receiverThread.setPortNum(this.portNum);
-        receiverThread.start();
+        //receiverThread.setPortNum(this.portNum);
+        //receiverThread.start();
+
+        server.startReceiverUDP(portNumber);
 
         this.setLocation(250,250);
         this.setDefaultLookAndFeelDecorated(true);
@@ -120,11 +124,11 @@ public class ServerGUI extends JFrame {
         slowMode.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if(slowMode.isSelected()){
-                    receiverThread.setSlowMode(true);
+                    server.setSlowMode(true);
                     updateClients(5);
                 }
                 else{
-                    receiverThread.setSlowMode(false);
+                    server.setSlowMode(false);
                 }
             }
         });

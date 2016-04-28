@@ -184,7 +184,7 @@ public class SenderUDP extends Thread {
         packetData[1] = (byte)flag;
         packetData[2] = (byte)method;
         System.arraycopy(data,0,packetData,3,data.length);
- 
+
         System.out.println("\n\nSENDER:: STATUS: Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
         DatagramPacket packet = new DatagramPacket(packetData, packetData.length, targetAddress, receiverPortNumber);
         return packet;
@@ -203,7 +203,7 @@ public class SenderUDP extends Thread {
            System.out.println("SENDER:: STATUS: Sending packet '" + new String(packet.getData()) + "' to IP address " + targetAddress + " and port number " + receiverPortNumber);
            socket.send(packet);
            long tStart = System.currentTimeMillis();
-           socket.setSoTimeout((int)timeout);
+           //socket.setSoTimeout((int)timeout);
            //Thread.sleep(100);
            System.out.println("SENDER:: STATUS: Set timeout to " + timeout + " ms");
            try {
@@ -256,7 +256,6 @@ public class SenderUDP extends Thread {
             System.out.println(e);
             System.exit(0);
         }
-        System.out.println("hello");
         ByteArrayInputStream byteStream = new ByteArrayInputStream(newData);
         System.out.println("SENDER:: INFO: The total length of the data within this message is " + newData.length + " bytes.");
 
@@ -270,7 +269,7 @@ public class SenderUDP extends Thread {
 
         flag = 1; //reset the flag after the whole message is sent
 
-        stopSender();
+        //stopSender();
     }
 
 }

@@ -52,7 +52,7 @@ public class Main {
 //            ClientGUI sender = new ClientGUI();
 
             // Sleeping simply for demo visualization purposes
-            Thread.sleep(10000);
+            //Thread.sleep(10000);
 
         }catch(Exception e){
             e.printStackTrace();

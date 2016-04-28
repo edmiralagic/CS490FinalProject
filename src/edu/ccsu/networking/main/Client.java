@@ -9,7 +9,7 @@ import java.util.Arrays;
  *
  * @author Deepankar Malhan, Edmir Alagic, Ben Downs
  */
-public class Client{   
+public class Client implements CanReceiveMessage {
     SenderUDP sender;
     ReceiverUDP receiver;
     byte expectedMessage;
@@ -17,6 +17,7 @@ public class Client{
     private int targetPortNum;
     private int portNum;
     private InetAddress targetIP;
+    private Thread receiverThread;
     
     public Client() {
         expectedMessage = (byte)200;
@@ -39,6 +40,14 @@ public class Client{
         sender.setTargetPort(this.targetPortNum);
         sender.setPortNum(this.portNum);
         sender.startSender();
+        System.out.println("CLIENT:: INFO: Started an instance of sender.");
+    }
+
+    public void startReceiverUDP(String port){
+        receiver = new ReceiverUDP(this);
+        receiver.setPortNum(Integer.getInteger(port));
+        receiverThread = new Thread(receiver);
+        System.out.println("CLIENT:: INFO: Started an instance of receiver.");
     }
 
     public void setSenderSlow(boolean slow){
@@ -78,5 +87,9 @@ public class Client{
     
     private boolean isExpectedMessage(byte[] dataReceived){
         return (dataReceived[0] == expectedMessage);
+    }
+
+    public void filterMessage(int method, String data, String ip, String port) {
+
     }
 }
