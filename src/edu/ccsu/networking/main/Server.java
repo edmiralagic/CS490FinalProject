@@ -9,7 +9,7 @@ import java.net.InetAddress;
 /**
  * Created by edmiralagic on 4/27/16.
  */
-public class Server implements CanReceiveMessage {
+public class Server{
     private SenderUDP sender;
     private ReceiverUDP receiver;
     
@@ -66,7 +66,7 @@ public class Server implements CanReceiveMessage {
     }
 
     public void startReceiverUDP(String port){
-        receiver = new ReceiverUDP(this);
+        receiver = new ReceiverUDP();
         receiver.setPortNum(Integer.parseInt(port));
         receiverThread = new Thread(receiver);
         receiverThread.start();
@@ -87,17 +87,5 @@ public class Server implements CanReceiveMessage {
         }
         System.out.println("\n\n");
         //We need to do a try catch statement to check if update failed, i.e., server ERROR 400 msg sent back.
-    }
-
-    @Override
-    public void filterMessage(int method, String data, String ip, String port) {
-        switch(method) {
-            case 1:
-                rcvInformAndUpdate(data, ip, port);
-                break;
-            //We need to get rid of this and use ExpectedMethod # to only read messages for an expected message
-            //
-        }
-        
     }
 }

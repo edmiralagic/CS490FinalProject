@@ -1,7 +1,4 @@
 package edu.ccsu.networking.udp;
-import edu.ccsu.networking.main.CanReceiveMessage;
-import edu.ccsu.networking.main.Client;
-import edu.ccsu.networking.main.Server;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -27,12 +24,9 @@ public class ReceiverUDP implements Runnable {
     private int method;
     private int flag;
 
-    private CanReceiveMessage peer;
-
-    public ReceiverUDP(CanReceiveMessage peer) {
+    public ReceiverUDP() {
         dataString = "";
         currentSeq = 0;
-        this.peer = peer;
     }
 
     /**
@@ -71,7 +65,6 @@ public class ReceiverUDP implements Runnable {
             dataString += new String(data);
             System.out.println("\n\nRECEIVER:: FINAL: '" + dataString + "'\n\n");
             System.out.println("RECEIVER:: INFO: Message method: " + method + " with a flag of: " + data[0]);
-            this.peer.filterMessage(method, dataString, address, port);
             //stopListening();
         }
         else {
