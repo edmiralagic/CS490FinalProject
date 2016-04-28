@@ -101,6 +101,8 @@ public class ClientGUI extends JFrame {
     }
 
     public void getResults(String search){
+        int resultCounter = 0;
+        
         if(search.equalsIgnoreCase(" ") || search.isEmpty()){
             System.out.println("EMPTY SEARCH");
             updateTableModel(searchedTableModel, searchTableModel);
@@ -111,7 +113,14 @@ public class ClientGUI extends JFrame {
                     String[] tempRow = {(searchedTableModel.getValueAt(r, 0).toString()), (searchedTableModel.getValueAt(r, 1).toString())};
                     tempTableModel.addRow(tempRow);
                     tempTableModel.fireTableDataChanged();
+                    resultCounter++;
                 }
+            }
+            //If no result found update the table with a placeholder String
+            if(resultCounter == 0) {
+                String[] noResults= {"No results found, please query again!"};
+                tempTableModel.addRow(noResults);
+                tempTableModel.fireTableDataChanged();
             }
             updateTableModel(searchedTableModel, tempTableModel);
             clearTableModel(tempTableModel);

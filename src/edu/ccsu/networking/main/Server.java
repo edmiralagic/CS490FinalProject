@@ -4,19 +4,18 @@ import edu.ccsu.networking.udp.ReceiverUDP;
 import edu.ccsu.networking.udp.SenderUDP;
 
 import javax.swing.table.DefaultTableModel;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 
 /**
  * Created by edmiralagic on 4/27/16.
  */
 public class Server implements CanReceiveMessage {
-    SenderUDP sender;
-    ReceiverUDP receiver;
-    byte expectedMessage;
-
+    private SenderUDP sender;
+    private ReceiverUDP receiver;
+    
+    private byte expectedMessage;
     private int targetPortNum;
-    private int portNum;
+    private int serverPortNum;
     private InetAddress targetIP;
     private Thread receiverThread;
     String[] columns = {"File Name", "File Size", "Host IP", "Host Port"};
@@ -31,18 +30,18 @@ public class Server implements CanReceiveMessage {
     public void startSenderUDP(String targetIP, String targetPort, String clientPort) throws Exception{
         sender = new SenderUDP();
         try {
-            this.targetIP = Inet4Address.getByName(targetIP);
+            this.targetIP = InetAddress.getByName(targetIP);
         }
         catch(Exception e){
             System.out.println("CLIENT:: ERROR: Failed to convert Target IP address.");
         }
-
+           //Why not have int arguments for port numbers?
         this.targetPortNum = Integer.parseInt(targetPort);
-        this.portNum = Integer.parseInt(clientPort);
+        this.serverPortNum = Integer.parseInt(clientPort);
 
-        sender.setTargetIP(this.targetIP);
-        sender.setTargetPort(this.targetPortNum);
-        sender.setPortNum(this.portNum);
+        sender.setTargetIP(this.targetIP); //Why do we need this line, if the if statement is already setting the value?
+        sender.setTargetPort(this.targetPortNum); //Same thing as above?
+        sender.setPortNum(this.serverPortNum); //Same thing as above?
         sender.startSender();
         System.out.println("CLIENT:: INFO: Started an instance of sender.");
     }
@@ -58,7 +57,8 @@ public class Server implements CanReceiveMessage {
     public void setTargetPortNum(int port){
         this.targetPortNum = port;
         try {
-            startSenderUDP(targetIP.getHostAddress(), Integer.toString(targetPortNum), Integer.toString(portNum));
+            //How is this not an infinite loop b/w setTargetPortNum and startSenderUDP?
+            startSenderUDP(targetIP.getHostAddress(), Integer.toString(targetPortNum), Integer.toString(serverPortNum));
         }
         catch(Exception e){
             System.out.println("SERVER:: ERROR: Could not start sender instance.");
@@ -86,12 +86,18 @@ public class Server implements CanReceiveMessage {
             System.out.println(directory.getValueAt(r,0) + " / " + directory.getValueAt(r,1) + " / " + directory.getValueAt(r,2) + " / " + directory.getValueAt(r,3));
         }
         System.out.println("\n\n");
+        //We need to do a try catch statement to check if update failed, i.e., server ERROR 400 msg sent back.
     }
 
     @Override
     public void filterMessage(int method, String data, String ip, String port) {
-        if(method == 1){
-            rcvInformAndUpdate(data,ip,port);
+        switch(method) {
+            case 1:
+                rcvInformAndUpdate(data, ip, port);
+                break;
+            //We need to get rid of this and use ExpectedMethod # to only read messages for an expected message
+            //
         }
+        
     }
 }
