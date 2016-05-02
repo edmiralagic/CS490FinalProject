@@ -5,6 +5,6 @@ package edu.ccsu.networking.main;
  */
 public interface CanReceiveMessage {
 
-    public void filterMessage(int method, String data, String ip, String port);
+    public void filterMessage(String method, String data, String ip, String port) throws Exception;
 
 }

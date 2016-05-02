@@ -3,7 +3,6 @@ package edu.ccsu.networking.udp;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.*;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 
 /**
@@ -18,27 +17,26 @@ import java.util.Arrays;
 
 public class SenderUDP extends Thread {
 
-    private final byte EOF = 0x24;
-    private int receiverPortNumber;
+    private int targetPort;
     private int senderPortNumber;
     private DatagramSocket socket;
-    private InetAddress targetAddress;
+    private InetAddress targetIP;
     private int currentSeq;
     private boolean receivedAck;
     private long timeout;
     private boolean slowMode;
-    private int method;
+    private String method;
     private int flag;
 
     public SenderUDP() {
-        receiverPortNumber = 0;
+        targetPort = 0;
         socket = null;
-        targetAddress = null;
+        targetIP = null;
         currentSeq = 0;
         timeout = 100; //initial timeout set to 100
         receivedAck = false;
         slowMode = false;
-        method = 0;
+        method = "";
         flag = 1;
     }
 
@@ -60,13 +58,13 @@ public class SenderUDP extends Thread {
     }
 
     public void setTargetIP(InetAddress targetIP){
-        this.targetAddress = targetIP;
-        System.out.println("SENDER:: INFO: Target IP address set to " + this.targetAddress.toString());
+        this.targetIP = targetIP;
+        System.out.println("SENDER:: INFO: Target IP address set to " + this.targetIP.toString());
     }
 
     public void setTargetPort(int port){
-        this.receiverPortNumber = port;
-        System.out.println("SENDER:: INFO: Target Port Number set to " + this.receiverPortNumber);
+        this.targetPort = port;
+        System.out.println("SENDER:: INFO: Target Port Number set to " + this.targetPort);
     }
 
     public void setPortNum(int port){
@@ -129,9 +127,8 @@ public class SenderUDP extends Thread {
                 DatagramPacket ack = new DatagramPacket(buf, buf.length);
                 socket.receive(ack);
 
-                 targetAddress = ack.getAddress();
                 System.out.println("SENDER:: INFO: Recieved ACK with Sequence Number: " + (int)ack.getData()[0]);
-                System.out.println("SENDER:: INFO: Received ACK from: " + targetAddress + ", port #: " + receiverPortNumber);
+                System.out.println("SENDER:: INFO: Received ACK from: " + targetIP + ", port #: " + targetPort);
                 
                 if(checkAck(ack)){
                     receivedAck = true;
@@ -162,31 +159,20 @@ public class SenderUDP extends Thread {
     }
 
     /**
-     *  Method sendEOFPacket makes a packet
-     *  containing the end of file string
-     */
-    public void sendEOFPacket() throws SocketException, IOException, InterruptedException{
-        byte[] packetDataEOF = {EOF};
-        DatagramPacket eof = makePacket(packetDataEOF);
-        System.out.println("SENDER:: STATUS: Sending EOF to IP address: " + targetAddress + " and port number " + receiverPortNumber);
-        socket.send(eof);
-    }
-
-    /**
      *  Method makePacket makes a packet containing the length of the packet
      *  as the first index, the sequence number as the second index, and
      *  the data from the byte stream following after (max total size is 128)
      *  @param data in the form of a byte array
      */
     public DatagramPacket makePacket(byte[] data){
-        byte[] packetData = new byte[(data.length + 3)];
+        byte[] packetData = new byte[(data.length + 5)];
         packetData[0] = (byte)currentSeq;
         packetData[1] = (byte)flag;
-        packetData[2] = (byte)method;
-        System.arraycopy(data,0,packetData,3,data.length);
-
+        byte[] methodArray = method.getBytes();
+        System.arraycopy(methodArray,0,packetData,2,methodArray.length);
+        System.arraycopy(data,0,packetData,5,data.length);
         System.out.println("\n\nSENDER:: STATUS: Making a packet with packet size " + packetData.length + " bytes and with seq # " + currentSeq);
-        DatagramPacket packet = new DatagramPacket(packetData, packetData.length, targetAddress, receiverPortNumber);
+        DatagramPacket packet = new DatagramPacket(packetData, packetData.length, targetIP, targetPort);
         return packet;
     }
 
@@ -200,7 +186,7 @@ public class SenderUDP extends Thread {
      */
     public void sendPacket(DatagramPacket packet) throws SocketException, IOException, InterruptedException{
        while(!receivedAck) {
-           System.out.println("SENDER:: STATUS: Sending packet '" + new String(packet.getData()) + "' to IP address " + targetAddress + " and port number " + receiverPortNumber);
+           System.out.println("SENDER:: STATUS: Sending packet '" + new String(packet.getData()) + "' with packet size: " + packet.getLength() + " bytes to IP address " + targetIP + " and port number " + targetPort);
            socket.send(packet);
            long tStart = System.currentTimeMillis();
            //socket.setSoTimeout((int)timeout);
@@ -244,13 +230,13 @@ public class SenderUDP extends Thread {
      * @param data
      */
     public void rdtSend(byte[] data) throws SocketException, IOException, InterruptedException {
+        byte[] methodArray = {data[0], data[1], data[2]};
+        this.method = new String(methodArray);
+        System.out.println("SENDER:: INFO: Saved method as " + method + " .");
 
-        method = data[0]; //save the method and take it out of the array of bytes
-        System.out.println("SENDER:: INFO: Saved method number as " + method + " .");
-
-        byte[] newData = new byte[data.length-1];
+        byte[] newData = new byte[data.length - 3];
         try {
-            System.arraycopy(data,1,newData,0,data.length-1);
+            System.arraycopy(data,3,newData,0,data.length - 3);
         }
         catch(Exception e){
             System.out.println(e);
@@ -263,13 +249,10 @@ public class SenderUDP extends Thread {
             byte[] packetData = makePacketData(byteStream);
             DatagramPacket packet = makePacket(packetData);
             sendPacket(packet);
-
-            Thread.sleep(1200);
+            Thread.sleep(1500);
         }
 
-        flag = 1; //reset the flag after the whole message is sent
-
-        //stopSender();
+        flag = 1; //reset the flag after the whole message is sents
     }
 
 }

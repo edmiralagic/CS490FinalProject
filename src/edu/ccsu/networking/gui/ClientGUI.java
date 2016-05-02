@@ -1,14 +1,11 @@
 package edu.ccsu.networking.gui;
 
 import edu.ccsu.networking.main.Client;
-import edu.ccsu.networking.udp.SenderUDP;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-import java.net.Inet4Address;
-import java.net.InetAddress;
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -16,13 +13,7 @@ import javax.swing.table.DefaultTableModel;
 
 public class ClientGUI extends JFrame {
 
-
-    public static void main(String[] args) throws Exception{
-        //ClientGUI frame = new ClientGUI();
-
-    }
-
-    Client client = new Client();
+    Client client = new Client(this);
 
     JPanel local_panel = new JPanel();
     JPanel search_panel = new JPanel();
@@ -30,9 +21,10 @@ public class ClientGUI extends JFrame {
 
     JPanel local_button_panel = new JPanel();
     JPanel search_button_panel = new JPanel();
+    JPanel exit_button_panel = new JPanel();
 
-    private String[] localColumns = {"Filename", "Size", "Location"};
-    private String[] searchColumns = {"Filename", "Size"};
+    private String[] localColumns = {"File Name", "File Size", "Location"};
+    private String[] searchColumns = {"File Name", "File Size", "Host IP", "Host Port"};
 
     private String[][] localData = new String[][] {};
     private String[][] searchData = new String[][] {};
@@ -56,6 +48,7 @@ public class ClientGUI extends JFrame {
 
     JButton search_button = new JButton("Search");
     JButton dwnld_button = new JButton("Download");
+    JButton exit_button = new JButton("Exit");
 
     JCheckBox slowMode = new JCheckBox("Slow");
 
@@ -86,7 +79,7 @@ public class ClientGUI extends JFrame {
     public void updateTableModel(DefaultTableModel oldTableModel, DefaultTableModel newTableModel){
         clearTableModel(oldTableModel);
         for(int r = 0; r < newTableModel.getRowCount(); r++){
-            String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString())};
+            String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString()),(newTableModel.getValueAt(r,2).toString()),(newTableModel.getValueAt(r,3).toString())};
             oldTableModel.addRow(tempData);
         }
         oldTableModel.fireTableDataChanged();
@@ -100,42 +93,25 @@ public class ClientGUI extends JFrame {
         }
     }
 
-    public void getResults(String search){
-        int resultCounter = 0;
-        
-        if(search.equalsIgnoreCase(" ") || search.isEmpty()){
-            System.out.println("EMPTY SEARCH");
-            updateTableModel(searchedTableModel, searchTableModel);
+    public void updateResults(DefaultTableModel results){
+        if(results.getRowCount() == 0){
+            clearTableModel(searchedTableModel);
         }
-        else {
-            for (int r = 0; r < searchedTableModel.getRowCount(); r++) {
-                if ((searchedTableModel.getValueAt(r, 0).toString()).toLowerCase().contains(search.toLowerCase())) {
-                    String[] tempRow = {(searchedTableModel.getValueAt(r, 0).toString()), (searchedTableModel.getValueAt(r, 1).toString())};
-                    tempTableModel.addRow(tempRow);
-                    tempTableModel.fireTableDataChanged();
-                    resultCounter++;
-                }
-            }
-            //If no result found update the table with a placeholder String
-            if(resultCounter == 0) {
-                String[] noResults= {"No results found, please query again!"};
-                tempTableModel.addRow(noResults);
-                tempTableModel.fireTableDataChanged();
-            }
-            updateTableModel(searchedTableModel, tempTableModel);
-            clearTableModel(tempTableModel);
-        }
+        clearTableModel(searchedTableModel);
+        updateTableModel(searchedTableModel, results);
         searchedTableModel.fireTableDataChanged();
     }
 
     public ClientGUI(String targetIP, String targetPort, String clientPort){
         super("Welcome to NapsterLITE [C]");
 
+        System.out.println("GUI:: INFO: CLIENT GUI STARTED.");
         try{
             client.startSenderUDP(targetIP, targetPort, clientPort);
+            client.startReceiverUDP(clientPort);
         }
         catch(Exception e){
-            System.out.println("GUI:: ERROR: Failed to start SenderUDP (client side).");
+            System.out.println("GUI:: ERROR: Failed to start sender or receiver udp (client side).");
         }
 
         this.setLocation(250,250);
@@ -163,6 +139,9 @@ public class ClientGUI extends JFrame {
         search_panel.add(new JScrollPane(searchTable));
         search_panel.add(search_button_panel);
 
+        exit_button_panel.setLayout(new BoxLayout(exit_button_panel, BoxLayout.LINE_AXIS));
+        exit_button_panel.setBorder(BorderFactory.createTitledBorder("LEAVE THE SERVER"));
+        exit_button_panel.add(exit_button, BorderLayout.CENTER);
 
         slow_panel.setBorder(BorderFactory.createTitledBorder("SLOW"));
         slow_panel.add(slowMode);
@@ -170,8 +149,10 @@ public class ClientGUI extends JFrame {
         this.add(slow_panel, BorderLayout.CENTER);
         this.add(local_panel, BorderLayout.WEST);
         this.add(search_panel, BorderLayout.EAST);
+        this.add(exit_button_panel, BorderLayout.SOUTH);
 
         this.addButtonAction();
+        this.exitButtonAction();
         this.searchButtonAction();
         this.removeButtonAction();
         this.shareButtonAction();
@@ -191,6 +172,19 @@ public class ClientGUI extends JFrame {
                 }
                 else{
                     client.setSenderSlow(false);
+                }
+            }
+        });
+    }
+
+    public void exitButtonAction(){
+        exit_button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                try{
+                    client.clientExitReq();
+                }
+                catch(Exception er){
+                    System.out.println("GUI:: ERROR: Failed to send client exit request (client side).");
                 }
             }
         });
@@ -244,7 +238,7 @@ public class ClientGUI extends JFrame {
                {
                    String fileName = (searchTable.getModel().getValueAt(row, 0).toString());
                    String fileSize = (searchTable.getModel().getValueAt(row, 1).toString());
-                   String fileReq = fileName + "#" + fileSize + "?";
+                   String fileReq = fileName + "#" + fileSize;
                    try {
                        client.clientDownloadReq(fileReq);
                        System.out.println("GUI:: INFO: Download request sent for File name: " + fileName + " and File size: " + fileSize + " bytes (client side).");
@@ -265,8 +259,6 @@ public class ClientGUI extends JFrame {
                     System.out.println("GUI:: ERROR: You must select some files before you can share anything (client side).");
                 }
                 else{
-                    System.out.println(localFiles);
-                    //send string of files from table
                     try {
                         client.informAndUpdate(localFiles);
                     }

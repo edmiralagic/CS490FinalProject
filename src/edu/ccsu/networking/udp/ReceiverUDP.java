@@ -1,9 +1,5 @@
 package edu.ccsu.networking.udp;
 import edu.ccsu.networking.main.CanReceiveMessage;
-import edu.ccsu.networking.main.Client;
-import edu.ccsu.networking.main.Server;
-
-import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.util.Arrays;
@@ -24,7 +20,8 @@ public class ReceiverUDP implements Runnable {
     private int currentSeq;
     private boolean slowMode = false;
     private boolean endOfMessage = false;
-    private int method;
+    byte[] packetMethod = new byte[3];
+    String method;
     private int flag;
 
     private CanReceiveMessage peer;
@@ -33,6 +30,7 @@ public class ReceiverUDP implements Runnable {
         dataString = "";
         currentSeq = 0;
         this.peer = peer;
+        this.method = "";
     }
 
     /**
@@ -61,21 +59,24 @@ public class ReceiverUDP implements Runnable {
      *  @param data
      */
     public void deliverData(byte[] data, String address, String port) {
-        /*0x24 is $ in hex. This value is being used as EOF for a bigger packet which will be delivered in
-        multiple UDP datagrams.*/
         flag = data[1];
-        method = data[2];
+        method = new String(packetMethod);
 
         if(flag == 0){
-            data = Arrays.copyOfRange(data,3,data.length);
+            data = Arrays.copyOfRange(data,5,data.length);
             dataString += new String(data);
             System.out.println("\n\nRECEIVER:: FINAL: '" + dataString + "'\n\n");
-            System.out.println("RECEIVER:: INFO: Message method: " + method + " with a flag of: " + data[0]);
-            this.peer.filterMessage(method, dataString, address, port);
-            //stopListening();
+            System.out.println("RECEIVER:: INFO: Message method: " + method + " with a flag of: " + flag);
+            try {
+                this.peer.filterMessage(method, dataString, address, port);
+            }
+            catch(Exception e){
+                System.out.println("RECEIVER:: ERROR: Failed to filter message");
+            }
+            dataString = "";
         }
         else {
-            data = Arrays.copyOfRange(data,3,data.length-3);
+            data = Arrays.copyOfRange(data,5,data.length);
             System.out.println("RECEIVER:: INFO: Delivered packet with: '" + new String(data) + "'");
             dataString += new String(data);
         }
@@ -128,24 +129,28 @@ public class ReceiverUDP implements Runnable {
             //If the received sequence number matches the currentSeq variable
             if(checkPacketSeq(packet)){
                 System.out.println("RECEIVER:: INFO: Received a packet with length: " + packetSize + " bytes.");
-                System.out.println("RECEIVER:: INFO: Packet[0]: " + packet.getData()[0] + " Packet[1]: " + packet.getData()[1] + " Packet[2]: " + packet.getData()[2] + " Packet[3]: " + + packet.getData()[3]);
+                packetMethod[0] = packet.getData()[2];
+                packetMethod[1] = packet.getData()[3];
+                packetMethod[2] = packet.getData()[4];
+                System.out.println("RECEIVER:: INFO: Packet[0]: " + packet.getData()[0] + " Packet[1]: " + packet.getData()[1] + " Packet[2]: " + new String(packetMethod));
                 //Extract data from the packet and deliver it. (ignoring first index which is sequence num)
                 byte[] packetData = Arrays.copyOfRange(packet.getData(),0,packetSize);
-                String packetIP = packet.getAddress().toString();
+                String packetIP = packet.getAddress().getHostAddress();
                 String packetPort = Integer.toString(packet.getPort());
-                deliverData(packetData,packetIP,packetPort);
 
                 //Create a packet with the ACK, and send it back to the sender.
                 byte[] seq =  {(byte)currentSeq};
                 DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
                 try {
+                    System.out.println("RECEIVER:: STATUS: Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
                     receivingSocket.send(ack);
                 }
                 catch(Exception e){
                     System.out.println("RECEIVER:: INFO: Failed to send ACK.");
                 }
 
-                System.out.println("RECEIVER:: STATUS: Sending Ack " + currentSeq + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+                deliverData(packetData,packetIP,packetPort);
+
                 //Server.setTargetIP();
                 //Change the sequence # from 0 to 1 or vice versa because the correct packet was delivered to receiver.
                 currentSeq = (currentSeq ^ 1);
@@ -154,14 +159,15 @@ public class ReceiverUDP implements Runnable {
                 //Not changing the expected seq #, this code creates a ACK of opposite # than expected #, and
                 //sends it to the sender.
                 byte[] seq =  {(byte)(currentSeq ^ 1)};
-                DatagramPacket ack = new DatagramPacket(seq, seq.length, packet.getAddress(), packet.getPort());
+                DatagramPacket ack = new DatagramPacket(seq,seq.length,packet.getAddress(),packet.getPort());
                 try{
+                    System.out.print("RECEIVER:: STATUS: Sending Ack " + (currentSeq^1) + " to IP address " + packet.getAddress().getHostAddress() + " and port number " + packet.getPort());
                     receivingSocket.send(ack);
                 }
                 catch(Exception e){
                     System.out.println("RECEIVER:: INFO: Failed to send ACK.");
                 }
-                System.out.print("RECEIVER:: STATUS: Sending Ack " + (currentSeq^1) + " to IP address " + packet.getAddress() + " and port number " + packet.getPort());
+
             }
         }
 

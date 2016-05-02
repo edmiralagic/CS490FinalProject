@@ -1,7 +1,6 @@
 package edu.ccsu.networking.gui;
 
 import edu.ccsu.networking.main.Server;
-import edu.ccsu.networking.udp.ReceiverUDP;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -16,13 +15,7 @@ import javax.swing.table.DefaultTableModel;
 public class ServerGUI extends JFrame {
 
 
-    public static void main(String[] args) throws Exception{
-        //ClientGUI frame = new ClientGUI();
-    }
-
-    //ReceiverUDP receiverThread = new ReceiverUDP();
-
-    Server server = new Server();
+    Server server = new Server(this);
 
     JPanel table_panel = new JPanel();
     JPanel clients_panel = new JPanel();
@@ -35,7 +28,7 @@ public class ServerGUI extends JFrame {
 
     private String[][] directoryData = new String[][] {};
 
-    DefaultTableModel localTableModel = new DefaultTableModel(directoryData, tableColumns);
+    DefaultTableModel directory = new DefaultTableModel(directoryData, tableColumns);
 
     Container c = getContentPane();
 
@@ -49,9 +42,13 @@ public class ServerGUI extends JFrame {
 
     public void updateLocalData(File mFile){
         String[] tempData = {mFile.getName(), String.valueOf(mFile.length()), mFile.getAbsolutePath()};
-        localTableModel.addRow(tempData);
-        localTableModel.fireTableDataChanged();
+        directory.addRow(tempData);
+        directory.fireTableDataChanged();
 
+    }
+
+    public void updateDirectory(DefaultTableModel newDirectory){
+        updateTableModel(directory, newDirectory);
     }
 
     public void updateClients(int num){
@@ -61,10 +58,16 @@ public class ServerGUI extends JFrame {
         this.repaint();
     }
 
+    public void updateDirectory(){
+        this.directory.fireTableDataChanged();
+        System.out.println("GUI:: INFO: The directory has been refreshed (server side).");
+    }
+
+
     public void updateTableModel(DefaultTableModel oldTableModel, DefaultTableModel newTableModel){
         clearTableModel(oldTableModel);
         for(int r = 0; r < newTableModel.getRowCount(); r++){
-            String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString())};
+            String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString()),(newTableModel.getValueAt(r,2).toString()),(newTableModel.getValueAt(r,3).toString())};
             oldTableModel.addRow(tempData);
         }
         oldTableModel.fireTableDataChanged();
@@ -78,22 +81,26 @@ public class ServerGUI extends JFrame {
         }
     }
 
-    public ServerGUI(String portNumber) {
+    public ServerGUI(String portNumber){
         super("Welcome to NapsterLITE [S]");
+
+        System.out.println("GUI:: INFO: SERVER GUI STARTED.");
 
         this.portNum = Integer.parseInt(portNumber);
 
-        //receiverThread.setPortNum(this.portNum);
-        //receiverThread.start();
-
-        server.startReceiverUDP(portNumber);
-
+        try {
+            server.startReceiverUDP(portNumber);
+            server.startSenderUDP(portNumber);
+        }
+        catch(Exception e){
+            System.out.println("GUI:: ERROR: Failed to start sender or receiver udp (server side).");
+        }
         this.setLocation(250,250);
         this.setDefaultLookAndFeelDecorated(true);
         BorderLayout bl = new BorderLayout();
         this.setLayout(bl);
 
-        JTable localTable = new JTable(localTableModel);
+        JTable localTable = new JTable(directory);
 
         table_panel.setLayout(new BoxLayout(table_panel, BoxLayout.PAGE_AXIS));
         table_panel.setBorder(BorderFactory.createTitledBorder("DIRECTORY"));
@@ -114,6 +121,7 @@ public class ServerGUI extends JFrame {
         this.add(slow_clients_panel, BorderLayout.EAST);
 
         this.slowModeAction();
+        this.updButtonAction();
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         this.pack();
         this.setResizable(false);
@@ -125,11 +133,18 @@ public class ServerGUI extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 if(slowMode.isSelected()){
                     server.setSlowMode(true);
-                    updateClients(5);
                 }
                 else{
                     server.setSlowMode(false);
                 }
+            }
+        });
+    }
+
+    public void updButtonAction(){
+        update_button.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                updateDirectory();
             }
         });
     }
