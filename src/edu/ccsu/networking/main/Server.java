@@ -128,6 +128,21 @@ public class Server implements CanReceiveMessage {
         results = "";
     }
 
+    public void sendHostClientReq(String info){
+        try {
+            System.out.println("SERVER:: INFO: Attempting to send host TCP connection info.");
+            byte[] dataByteArray = new byte[info.length() + 3];
+
+            System.arraycopy("600".getBytes(),0,dataByteArray,0,"600".getBytes().length);
+            System.arraycopy(info.getBytes(), 0, dataByteArray, 3, info.getBytes().length);
+            this.sender.rdtSend(dataByteArray);
+        }
+        catch(Exception e){
+            System.out.println("SERVER:: ERROR: Failed to send host TCP connection info.");
+            serverResponse("400");
+        }
+    }
+
     public void rcvDownloadReq(String data, String ip, String port){
         try {
             System.out.println("SERVER:: INFO: Attempting to retrieve the connection info for the requested file.");
@@ -139,6 +154,7 @@ public class Server implements CanReceiveMessage {
                     info += directory.getValueAt(r, 0) + "#" + directory.getValueAt(r, 1) + "#" + directory.getValueAt(r, 2) + "#" + directory.getValueAt(r, 3);
                 }
             }
+            sendHostClientReq(info);
             clientConnectionInfo(info);
         }
         catch(Exception e){
@@ -188,12 +204,12 @@ public class Server implements CanReceiveMessage {
         try {
             System.out.println("SERVER:: INFO: Attempting to send informAndUpdate response.");
             String server = "Server Error";
-            if (method.equals("200")) {
+            if (method.equalsIgnoreCase("200")) {
                 server = "Server OK";
             }
 
             byte[] dataByteArray = new byte[server.length() + 3];
-            System.arraycopy("200".getBytes(),0,dataByteArray,0,"200".getBytes().length);
+            System.arraycopy(method.getBytes(),0,dataByteArray,0,method.getBytes().length);
             System.arraycopy(server.getBytes(), 0, dataByteArray, 3, server.getBytes().length);
 
             this.sender.rdtSend(dataByteArray);

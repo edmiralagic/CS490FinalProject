@@ -132,6 +132,11 @@ public class ClientGUI extends JFrame {
         oldTableModel.fireTableDataChanged();
     }
 
+    public DefaultTableModel getLocalTableModel(){
+        localTableModel.fireTableDataChanged();
+        return this.localTableModel;
+    }
+
     /**
      * Clears the whole TableModel given to this method by removing all the rows in the table.
      * Used as a helper method by updateTableModel.

@@ -4,7 +4,9 @@ import edu.ccsu.networking.gui.ClientGUI;
 import edu.ccsu.networking.udp.*;
 
 import javax.swing.table.DefaultTableModel;
+import java.io.*;
 import java.net.*;
+import java.util.Arrays;
 
 /**
  *
@@ -22,8 +24,10 @@ public class Client implements CanReceiveMessage {
     ClientGUI gui;
     private String[] connectionInfo;
     String[] columns = {"File Name", "File Size", "Host IP", "Host Port"};
+    String[] localColumns = {"File Name", "File Size", "Location"};
     String[][] resultsData = {};
     DefaultTableModel searchResults = new DefaultTableModel(resultsData,columns);
+    DefaultTableModel localTable = new DefaultTableModel(resultsData, localColumns);
     private String[] previousMessage = new String[4];
     
     public Client(ClientGUI gui) {
@@ -155,8 +159,30 @@ public class Client implements CanReceiveMessage {
      * @param data 
      */
     public void rcvConnectionInfo(String data){
-        System.out.println("CLIENT:: INFO: Received data for connection info -> " + data);
-        //establish tcp connection with this...
+        try {
+            Socket socket = new Socket("localhost", 7002);
+            InputStream fromServer = socket.getInputStream();
+            String[] fileInfo = data.split("#");
+
+            String fileLocation = fileInfo[0];
+            File file = new File(fileLocation);
+            BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(file));
+            int count = 0;
+
+            byte[] buffer = new byte[2048];
+
+            while ((count = fromServer.read(buffer)) != -1) {
+                buffer = Arrays.copyOf(buffer, count);
+                output.write(buffer);
+                //System.out.println("RECEIVER:: Read " + count + " bytes from the input stream!");
+            }
+            fromServer.close();
+            output.flush();
+            socket.close();
+        }
+        catch(Exception e){
+            System.out.println("CLIENT:: ERROR: Could not receive TCP file");
+        }
     }
     
     /**
@@ -176,14 +202,71 @@ public class Client implements CanReceiveMessage {
      */
     private boolean isExpectedMessage(String method){
        // REMARK:: WHAT DA HELL BRAH?
-        if(this.expectedMessage.isEmpty()){
-            return true;
-        }
+//        if(this.expectedMessage.isEmpty()){
+//            return true;
+//        }
         // REMARK:: Would be better if we call rcvServerErr here instead of sending back true!
-        if(method.equalsIgnoreCase("400")){
+        if(method.equalsIgnoreCase("400") || method.equalsIgnoreCase("600")){
             return true;
         }
         return (method.equals(this.expectedMessage));
+    }
+
+    public void updateTableModel(DefaultTableModel oldTableModel, DefaultTableModel newTableModel){
+        clearTableModel(oldTableModel);
+        for(int r = 0; r < newTableModel.getRowCount(); r++){
+
+            // Stores each row of the newTableModle in a temporary String array and adds this array to the old
+            // TableModel after clearing the whole oldTableModel at the beginning of the method call.
+
+            String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString()),(newTableModel.getValueAt(r,2).toString()),(newTableModel.getValueAt(r,3).toString())};
+            oldTableModel.addRow(tempData);
+        }
+        oldTableModel.fireTableDataChanged();
+    }
+
+    public void retrieveLocalTable(){
+        updateTableModel(localTable, this.gui.getLocalTableModel());
+    }
+
+    public String[] getFileInfo(String keyword){
+        try {
+            retrieveLocalTable();
+            String fileName = keyword.split("#")[0];
+            for (int r = 0; r < localTable.getRowCount(); r++) {
+                if (localTable.getValueAt(r, 0).toString().equalsIgnoreCase(keyword)) {
+                    String[] info = {localTable.getValueAt(r, 0).toString(), localTable.getValueAt(r, 1).toString(), localTable.getValueAt(r, 2).toString()};
+                    return info;
+                }
+            }
+        }
+        catch(Exception e){
+            System.out.println("CLIENT:: ERROR: Failed to get file info for TCP connection.");
+        }
+        return null;
+    }
+
+    public void startTCPSender(String reqFile){
+        try {
+            ServerSocket serverSocket = new ServerSocket(7002);
+            Socket clientSocket = serverSocket.accept();
+            String[] fileInfo = getFileInfo(reqFile);
+
+            File file = new File(fileInfo[2]); //file location
+
+            BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file));
+            OutputStream outputStream = clientSocket.getOutputStream();
+
+
+            fileInputStream.close();
+            outputStream.close();
+            outputStream.flush();
+            serverSocket.close();
+            clientSocket.close();
+        }
+        catch(Exception e){
+            System.out.println("CLIENT:: ERROR: Failed to establish the TCP connection.");
+        }
     }
 
     /**
@@ -216,7 +299,10 @@ public class Client implements CanReceiveMessage {
                     break;
                 case "100":
                     rcvExitResponse();
-                    break;                    
+                    break;
+                case "600":
+                    startTCPSender(data);
+                    break;
             }
         }
         else{
