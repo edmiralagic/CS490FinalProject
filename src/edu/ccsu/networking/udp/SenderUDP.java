@@ -249,10 +249,12 @@ public class SenderUDP extends Thread {
             byte[] packetData = makePacketData(byteStream);
             DatagramPacket packet = makePacket(packetData);
             sendPacket(packet);
-            Thread.sleep(1500);
+            if(slowMode){
+                Thread.sleep(4000);
+            }
         }
 
-        flag = 1; //reset the flag after the whole message is sents
+        flag = 1; //reset the flag after the whole message is sent
     }
 
 }

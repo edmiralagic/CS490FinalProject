@@ -50,14 +50,27 @@ public class Client implements CanReceiveMessage {
         System.out.println("CLIENT:: INFO: Started an instance of sender.");
     }
 
+    /**
+     * Start a new Receiver for receiving all the messages from the Server for this instance of the Client.
+     * 
+     * @param port 
+     */
     public void startReceiverUDP(String port){
         receiver = new ReceiverUDP(this);
         receiver.setPortNum(Integer.parseInt(port));
+        
+        //Start a new Receiver for all the UDP messages that the Client will get from the Server
         receiverThread = new Thread(receiver);
         receiverThread.start();
         System.out.println("CLIENT:: INFO: Started an instance of receiver.");
     }
 
+    /**
+     * Sets the value for the Slow mode for the client according to the Slow Mode check box in ClientGUI instance
+     * connected to this Client instance.
+     * 
+     * @param slow 
+     */
     public void setSenderSlow(boolean slow){
         sender.setSlowMode(slow);
     }
@@ -137,26 +150,56 @@ public class Client implements CanReceiveMessage {
         }
     }
 
+    /**
+     *  Receive the 500 status Download info in response to Download Request 
+     * @param data 
+     */
     public void rcvConnectionInfo(String data){
         System.out.println("CLIENT:: INFO: Received data for connection info -> " + data);
         //establish tcp connection with this...
     }
-
+    
+    /**
+     * This method is invoked when we have successfully received the Exit ACK from the server.
+     * This is the end point for this Client instance.
+     */
     public void rcvExitResponse(){
         this.gui.hideWindow();
+        //REMARK:: Memory leak! What about closing all the ports here for the Client?
     }
     
+    /**
+     * Used as a helper method by filterMessage to check if the packet has the expected method # in header.
+     * 
+     * @param method
+     * @return True of the packet received is expected, else False.
+     */
     private boolean isExpectedMessage(String method){
+       // REMARK:: WHAT DA HELL BRAH?
         if(this.expectedMessage.isEmpty()){
             return true;
         }
-        if(method == "400"){
+        // REMARK:: Would be better if we call rcvServerErr here instead of sending back true!
+        if(method.equalsIgnoreCase("400")){
             return true;
         }
         return (method.equals(this.expectedMessage));
     }
 
+    /**
+     * Filters all the messages coming in and calls the appropriate method according to the 
+     * method # in the packet headers.
+     * 
+     * @param method
+     * @param data
+     * @param ip
+     * @param port
+     * @throws Exception 
+     */
+    @Override
     public void filterMessage(String method, String data, String ip, String port) throws Exception{
+        // REMARK:: Is this called after every packet is received or after the Client gets the whole message
+        // REMARK2:: Why does it need the IP and Port?
         if(isExpectedMessage(method)){
             switch(method) {
                 case "200":
@@ -173,7 +216,7 @@ public class Client implements CanReceiveMessage {
                     break;
                 case "100":
                     rcvExitResponse();
-                    break;
+                    break;                    
             }
         }
         else{

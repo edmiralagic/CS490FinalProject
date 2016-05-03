@@ -27,7 +27,7 @@ public class Receiver{
         System.out.println("RECEIVER:: Output stream to the server created by the receiver!");
         System.out.println("RECEIVER:: Output stream to a file created by the receiver!");
 
-        String fileLocation = "/Users/edmiralagic/Desktop/ugly.mp4";
+        String fileLocation = "C:\\Users\\deepa\\Documents\\test.exe";
         File file = new File(fileLocation);
         BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(file));
         int count = 0;
