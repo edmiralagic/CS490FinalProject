@@ -83,9 +83,8 @@ public class ClientGUI extends JFrame {
         String[] tempData = {mFile.getName(), String.valueOf(mFile.length()), mFile.getAbsolutePath()};
         localTableModel.addRow(tempData);
         localTableModel.fireTableDataChanged();
-        client.updateTableModel(localTableModel);
-        
-        //Update the localString by creating it again with the new rows in the localTable
+        this.client.updateTableModel(localTableModel);
+
         constrLocalString();
     }
 

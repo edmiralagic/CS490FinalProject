@@ -215,28 +215,24 @@ public class Client implements CanReceiveMessage {
     }
 
     public void updateTableModel(DefaultTableModel newTableModel){
-        clearTableModel(localTable);
+        clearTableModel(this.localTable);
         for(int r = 0; r < newTableModel.getRowCount(); r++){
-
-            // Stores each row of the newTableModle in a temporary String array and adds this array to the old
-            // TableModel after clearing the whole oldTableModel at the beginning of the method call.
-
             String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString()),(newTableModel.getValueAt(r,2).toString())};
-            localTable.addRow(tempData);
+            this.localTable.addRow(tempData);
         }
-        localTable.fireTableDataChanged();
+        this.localTable.fireTableDataChanged();
     }
 
 
     public String[] getFileInfo(String keyword){
         try {
             //retrieveLocalTable();
-            localTable.fireTableDataChanged();
+            this.localTable.fireTableDataChanged();
             String fileName = keyword.split("#")[0];
-            System.out.println(localTable.getRowCount());
-            for (int r = 0; r < localTable.getRowCount(); r++) {
-                if (localTable.getValueAt(r, 0).toString().equalsIgnoreCase(fileName)) {
-                    String[] info = {localTable.getValueAt(r, 0).toString(), localTable.getValueAt(r, 1).toString(), localTable.getValueAt(r, 2).toString()};
+            System.out.println(this.localTable.getRowCount());
+            for (int r = 0; r < this.localTable.getRowCount(); r++) {
+                if (this.localTable.getValueAt(r, 0).toString().equalsIgnoreCase(fileName)) {
+                    String[] info = {(this.localTable.getValueAt(r, 0).toString()), (this.localTable.getValueAt(r, 1).toString()), (this.localTable.getValueAt(r, 2).toString())};
                     return info;
                 }
             }
