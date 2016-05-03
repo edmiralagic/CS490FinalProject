@@ -160,12 +160,13 @@ public class Client implements CanReceiveMessage {
      */
     public void rcvConnectionInfo(String data){
         try {
-            Socket socket = new Socket("localhost", 7002);
-            InputStream fromServer = socket.getInputStream();
+            Thread.sleep(2000);
             String[] fileInfo = data.split("#");
+            Socket socket = new Socket(fileInfo[2], 7002);
+            InputStream fromServer = socket.getInputStream();
 
-            String fileLocation = fileInfo[0];
-            File file = new File(fileLocation);
+            String fileName = fileInfo[0];
+            File file = new File(fileName);
             BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(file));
             int count = 0;
 
@@ -174,7 +175,6 @@ public class Client implements CanReceiveMessage {
             while ((count = fromServer.read(buffer)) != -1) {
                 buffer = Arrays.copyOf(buffer, count);
                 output.write(buffer);
-                //System.out.println("RECEIVER:: Read " + count + " bytes from the input stream!");
             }
             fromServer.close();
             output.flush();
@@ -209,7 +209,9 @@ public class Client implements CanReceiveMessage {
         if(method.equalsIgnoreCase("400") || method.equalsIgnoreCase("600")){
             return true;
         }
-        return (method.equals(this.expectedMessage));
+        else{
+            return (method.equalsIgnoreCase(this.expectedMessage));
+        }
     }
 
     public void updateTableModel(DefaultTableModel oldTableModel, DefaultTableModel newTableModel){
@@ -226,7 +228,9 @@ public class Client implements CanReceiveMessage {
     }
 
     public void retrieveLocalTable(){
-        updateTableModel(localTable, this.gui.getLocalTableModel());
+        DefaultTableModel temp = new DefaultTableModel(this.gui.getLocalTableModel(),localColumns);
+        this.updateTableModel(localTable, temp);
+        System.out.println("CLIENT:: INFO: Retrieved local table model..");
     }
 
     public String[] getFileInfo(String keyword){
@@ -299,9 +303,6 @@ public class Client implements CanReceiveMessage {
                     break;
                 case "100":
                     rcvExitResponse();
-                    break;
-                case "600":
-                    startTCPSender(data);
                     break;
             }
         }

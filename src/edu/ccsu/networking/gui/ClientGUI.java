@@ -132,9 +132,14 @@ public class ClientGUI extends JFrame {
         oldTableModel.fireTableDataChanged();
     }
 
-    public DefaultTableModel getLocalTableModel(){
-        localTableModel.fireTableDataChanged();
-        return this.localTableModel;
+    public String[][] getLocalTableModel(){
+        String[][] temp = new String[localTableModel.getRowCount()][3];
+        for(int r = 0; r < localTableModel.getRowCount(); r++){
+            temp[r][0] = localTableModel.getValueAt(r,0).toString();
+            temp[r][1] = localTableModel.getValueAt(r,1).toString();
+            temp[r][2] = localTableModel.getValueAt(r,2).toString();
+        }
+        return temp;
     }
 
     /**
