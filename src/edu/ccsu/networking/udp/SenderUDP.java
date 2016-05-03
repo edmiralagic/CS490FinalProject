@@ -253,7 +253,7 @@ public class SenderUDP extends Thread {
                 Thread.sleep(4000);
             }
         }
-
+        currentSeq = 0;
         flag = 1; //reset the flag after the whole message is sent
     }
 

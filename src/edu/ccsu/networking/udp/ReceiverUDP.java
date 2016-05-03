@@ -67,6 +67,7 @@ public class ReceiverUDP implements Runnable {
             dataString += new String(data);
             System.out.println("\n\nRECEIVER:: FINAL: '" + dataString + "'\n\n");
             System.out.println("RECEIVER:: INFO: Message method: " + method + " with a flag of: " + flag);
+            currentSeq = 0;
             try {
                 this.peer.filterMessage(method, dataString, address, port);
             }
@@ -149,11 +150,12 @@ public class ReceiverUDP implements Runnable {
                     System.out.println("RECEIVER:: INFO: Failed to send ACK.");
                 }
 
-                deliverData(packetData,packetIP,packetPort);
 
                 //Server.setTargetIP();
                 //Change the sequence # from 0 to 1 or vice versa because the correct packet was delivered to receiver.
                 currentSeq = (currentSeq ^ 1);
+
+                deliverData(packetData,packetIP,packetPort);
             }
             else{
                 //Not changing the expected seq #, this code creates a ACK of opposite # than expected #, and
