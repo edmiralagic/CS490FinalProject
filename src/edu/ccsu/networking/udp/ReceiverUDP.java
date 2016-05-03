@@ -67,7 +67,7 @@ public class ReceiverUDP implements Runnable {
             dataString += new String(data);
             System.out.println("\n\nRECEIVER:: FINAL: '" + dataString + "'\n\n");
             System.out.println("RECEIVER:: INFO: Message method: " + method + " with a flag of: " + flag);
-            currentSeq = 0;
+            this.currentSeq = 0;
             try {
                 this.peer.filterMessage(method, dataString, address, port);
             }
@@ -130,11 +130,11 @@ public class ReceiverUDP implements Runnable {
             //If the received sequence number matches the currentSeq variable
             if(checkPacketSeq(packet)){
                 System.out.println("RECEIVER:: INFO: Received a packet with length: " + packetSize + " bytes.");
-                packetMethod[0] = packet.getData()[2];
-                packetMethod[1] = packet.getData()[3];
-                packetMethod[2] = packet.getData()[4];
+                this.packetMethod[0] = packet.getData()[2];
+                this.packetMethod[1] = packet.getData()[3];
+                this.packetMethod[2] = packet.getData()[4];
                 System.out.println("RECEIVER:: INFO: Packet[0]: " + packet.getData()[0] + " Packet[1]: " + packet.getData()[1] + " Packet[2]: " + new String(packetMethod));
-                //Extract data from the packet and deliver it. (ignoring first index which is sequence num)
+
                 byte[] packetData = Arrays.copyOfRange(packet.getData(),0,packetSize);
                 String packetIP = packet.getAddress().getHostAddress();
                 String packetPort = Integer.toString(packet.getPort());
@@ -154,7 +154,7 @@ public class ReceiverUDP implements Runnable {
 
                 //Server.setTargetIP();
                 //Change the sequence # from 0 to 1 or vice versa because the correct packet was delivered to receiver.
-                currentSeq = (currentSeq ^ 1);
+                this.currentSeq = (this.currentSeq ^ 1);
 
                 deliverData(packetData,packetIP,packetPort);
             }

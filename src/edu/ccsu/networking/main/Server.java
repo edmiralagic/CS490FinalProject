@@ -214,7 +214,7 @@ public class Server implements CanReceiveMessage {
 
             byte[] dataByteArray = new byte[server.length() + 3];
             System.arraycopy(method.getBytes(),0,dataByteArray,0,method.getBytes().length);
-            System.arraycopy(server.getBytes(), 0, dataByteArray, 3, server.getBytes().length);
+            System.arraycopy(server.getBytes(),0,dataByteArray,3,server.getBytes().length);
 
             this.sender.rdtSend(dataByteArray);
         }

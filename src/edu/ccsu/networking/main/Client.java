@@ -160,12 +160,13 @@ public class Client implements CanReceiveMessage {
      */
     public void rcvConnectionInfo(String data){
         try {
-            Socket socket = new Socket("localhost", 7002);
-            InputStream fromServer = socket.getInputStream();
+            Thread.sleep(2000);
             String[] fileInfo = data.split("#");
+            Socket socket = new Socket(fileInfo[2], 7002);
+            InputStream fromServer = socket.getInputStream();
 
-            String fileLocation = fileInfo[0];
-            File file = new File(fileLocation);
+            String fileName = fileInfo[0];
+            File file = new File(fileName);
             BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(file));
             int count = 0;
 
@@ -174,7 +175,6 @@ public class Client implements CanReceiveMessage {
             while ((count = fromServer.read(buffer)) != -1) {
                 buffer = Arrays.copyOf(buffer, count);
                 output.write(buffer);
-                //System.out.println("RECEIVER:: Read " + count + " bytes from the input stream!");
             }
             fromServer.close();
             output.flush();
@@ -209,39 +209,37 @@ public class Client implements CanReceiveMessage {
         if(method.equalsIgnoreCase("400") || method.equalsIgnoreCase("600")){
             return true;
         }
-        return (method.equals(this.expectedMessage));
-    }
-
-    public void updateTableModel(DefaultTableModel oldTableModel, DefaultTableModel newTableModel){
-        clearTableModel(oldTableModel);
-        for(int r = 0; r < newTableModel.getRowCount(); r++){
-
-            // Stores each row of the newTableModle in a temporary String array and adds this array to the old
-            // TableModel after clearing the whole oldTableModel at the beginning of the method call.
-
-            String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString()),(newTableModel.getValueAt(r,2).toString()),(newTableModel.getValueAt(r,3).toString())};
-            oldTableModel.addRow(tempData);
+        else{
+            return (method.equalsIgnoreCase(this.expectedMessage));
         }
-        oldTableModel.fireTableDataChanged();
     }
 
-    public void retrieveLocalTable(){
-        updateTableModel(localTable, this.gui.getLocalTableModel());
+    public void updateTableModel(DefaultTableModel newTableModel){
+        clearTableModel(this.localTable);
+        for(int r = 0; r < newTableModel.getRowCount(); r++){
+            String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString()),(newTableModel.getValueAt(r,2).toString())};
+            this.localTable.addRow(tempData);
+        }
+        this.localTable.fireTableDataChanged();
     }
+
 
     public String[] getFileInfo(String keyword){
         try {
-            retrieveLocalTable();
+            //retrieveLocalTable();
+            this.localTable.fireTableDataChanged();
             String fileName = keyword.split("#")[0];
-            for (int r = 0; r < localTable.getRowCount(); r++) {
-                if (localTable.getValueAt(r, 0).toString().equalsIgnoreCase(keyword)) {
-                    String[] info = {localTable.getValueAt(r, 0).toString(), localTable.getValueAt(r, 1).toString(), localTable.getValueAt(r, 2).toString()};
+            System.out.println(this.localTable.getRowCount());
+            for (int r = 0; r < this.localTable.getRowCount(); r++) {
+                if (this.localTable.getValueAt(r, 0).toString().equalsIgnoreCase(fileName)) {
+                    String[] info = {(this.localTable.getValueAt(r, 0).toString()), (this.localTable.getValueAt(r, 1).toString()), (this.localTable.getValueAt(r, 2).toString())};
                     return info;
                 }
             }
         }
         catch(Exception e){
             System.out.println("CLIENT:: ERROR: Failed to get file info for TCP connection.");
+            e.printStackTrace();
         }
         return null;
     }

@@ -216,7 +216,7 @@ public class SenderUDP extends Thread {
      *  @param byteStream from above (data from above)
      */
     public byte[] makePacketData(ByteArrayInputStream byteStream) throws SocketException, IOException, InterruptedException{
-        byte[] packetData = new byte[125];
+        byte[] packetData = new byte[123];
         int bytesRead = byteStream.read(packetData);
         //THIS DIRECTLY ABOVE AND BELOW MUST STAY, VERY IMPORTANT
         if (bytesRead<packetData.length){
