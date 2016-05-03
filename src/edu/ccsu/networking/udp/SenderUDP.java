@@ -187,15 +187,18 @@ public class SenderUDP extends Thread {
     public void sendPacket(DatagramPacket packet) throws SocketException, IOException, InterruptedException{
        while(!receivedAck) {
            System.out.println("SENDER:: STATUS: Sending packet '" + new String(packet.getData()) + "' with packet size: " + packet.getLength() + " bytes to IP address " + targetIP + " and port number " + targetPort);
+           if(slowMode){
+                Thread.sleep(4000);
+            }
            socket.send(packet);
            long tStart = System.currentTimeMillis();
-           //socket.setSoTimeout((int)timeout);
+           socket.setSoTimeout((int)timeout);
            //Thread.sleep(100);
            System.out.println("SENDER:: STATUS: Set timeout to " + timeout + " ms");
            try {
                receiveAck(packet);
                long rtt = System.currentTimeMillis() - tStart;
-               //adjustTimeout(rtt);
+               adjustTimeout(rtt);
                System.out.println("SENDER:: INFO: RTT calculated: " + rtt + "ms" /* + ", timeout adjusted to " + timeout + " ms"*/);
            }
            catch(SocketTimeoutException e){
@@ -248,10 +251,10 @@ public class SenderUDP extends Thread {
         while (byteStream.available() > 0){
             byte[] packetData = makePacketData(byteStream);
             DatagramPacket packet = makePacket(packetData);
+            System.out.println("The slowMode is: " + slowMode);
+            
             sendPacket(packet);
-            if(slowMode){
-                Thread.sleep(4000);
-            }
+            
         }
         currentSeq = 0;
         flag = 1; //reset the flag after the whole message is sent
