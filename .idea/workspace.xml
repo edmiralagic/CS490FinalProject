@@ -4,6 +4,7 @@
     <list default="true" id="e85fca01-a84b-42d5-8e5a-a2c2d3ee4279" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/edu/ccsu/networking/gui/ClientGUI.java" afterPath="$PROJECT_DIR$/src/edu/ccsu/networking/gui/ClientGUI.java" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/edu/ccsu/networking/main/Client.java" afterPath="$PROJECT_DIR$/src/edu/ccsu/networking/main/Client.java" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/edu/ccsu/networking/udp/ReceiverUDP.java" afterPath="$PROJECT_DIR$/src/edu/ccsu/networking/udp/ReceiverUDP.java" />
     </list>
     <ignored path="SimpleNetworkExample.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -62,8 +63,8 @@
       <file leaf-file-name="ReceiverUDP.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/edu/ccsu/networking/udp/ReceiverUDP.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="146">
-              <caret line="157" column="23" selection-start-line="157" selection-start-column="23" selection-end-line="157" selection-end-column="23" />
+            <state relative-caret-position="288">
+              <caret line="67" column="19" selection-start-line="67" selection-start-column="19" selection-end-line="67" selection-end-column="19" />
               <folding />
             </state>
           </provider>
@@ -92,8 +93,8 @@
       <file leaf-file-name="Client.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/edu/ccsu/networking/main/Client.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="515">
-              <caret line="249" column="20" selection-start-line="249" selection-start-column="20" selection-end-line="249" selection-end-column="20" />
+            <state relative-caret-position="390">
+              <caret line="233" column="46" selection-start-line="233" selection-start-column="46" selection-end-line="233" selection-end-column="46" />
               <folding />
             </state>
           </provider>
@@ -102,8 +103,8 @@
       <file leaf-file-name="ClientGUI.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/edu/ccsu/networking/gui/ClientGUI.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="285">
-              <caret line="141" column="20" selection-start-line="141" selection-start-column="20" selection-end-line="141" selection-end-column="20" />
+            <state relative-caret-position="165">
+              <caret line="85" column="26" selection-start-line="85" selection-start-column="26" selection-end-line="85" selection-end-column="26" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -156,8 +157,8 @@
         <option value="$PROJECT_DIR$/src/edu/ccsu/networking/tcp/Sender.java" />
         <option value="$PROJECT_DIR$/src/edu/ccsu/networking/tcp/Receiver.java" />
         <option value="$PROJECT_DIR$/src/edu/ccsu/networking/udp/SenderUDP.java" />
-        <option value="$PROJECT_DIR$/src/edu/ccsu/networking/udp/ReceiverUDP.java" />
         <option value="$PROJECT_DIR$/src/edu/ccsu/networking/main/Server.java" />
+        <option value="$PROJECT_DIR$/src/edu/ccsu/networking/udp/ReceiverUDP.java" />
         <option value="$PROJECT_DIR$/src/edu/ccsu/networking/gui/ClientGUI.java" />
         <option value="$PROJECT_DIR$/src/edu/ccsu/networking/main/Client.java" />
       </list>
@@ -589,7 +590,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="839" extended-state="6" />
+    <frame x="0" y="23" width="1440" height="839" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -600,7 +601,7 @@
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33199465" sideWeight="0.5028612" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32987013" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.6636364" sideWeight="0.49713877" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.86883116" sideWeight="0.49713877" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32931727" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -813,14 +814,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/edu/ccsu/networking/udp/ReceiverUDP.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="146">
-          <caret line="157" column="23" selection-start-line="157" selection-start-column="23" selection-end-line="157" selection-end-column="23" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/AmazonEchoReview_Part01.JPG">
       <provider selected="true" editor-type-id="images">
         <state />
@@ -842,10 +835,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/edu/ccsu/networking/udp/ReceiverUDP.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="288">
+          <caret line="67" column="19" selection-start-line="67" selection-start-column="19" selection-end-line="67" selection-end-column="19" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/edu/ccsu/networking/gui/ClientGUI.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="141" column="20" selection-start-line="141" selection-start-column="20" selection-end-line="141" selection-end-column="20" />
+        <state relative-caret-position="165">
+          <caret line="85" column="26" selection-start-line="85" selection-start-column="26" selection-end-line="85" selection-end-column="26" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
@@ -854,8 +855,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/edu/ccsu/networking/main/Client.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="515">
-          <caret line="249" column="20" selection-start-line="249" selection-start-column="20" selection-end-line="249" selection-end-column="20" />
+        <state relative-caret-position="390">
+          <caret line="233" column="46" selection-start-line="233" selection-start-column="46" selection-end-line="233" selection-end-column="46" />
           <folding />
         </state>
       </provider>

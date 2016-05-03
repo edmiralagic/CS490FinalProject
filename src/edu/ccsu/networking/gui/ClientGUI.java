@@ -12,9 +12,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
-//import javax.swing.BorderFactory;
-//import javax.swing.JFrame;
-//import javax.swing.JPanel;
 import javax.swing.table.DefaultTableModel;
 
 public class ClientGUI extends JFrame {
@@ -86,6 +83,7 @@ public class ClientGUI extends JFrame {
         String[] tempData = {mFile.getName(), String.valueOf(mFile.length()), mFile.getAbsolutePath()};
         localTableModel.addRow(tempData);
         localTableModel.fireTableDataChanged();
+        client.updateTableModel(localTableModel);
         
         //Update the localString by creating it again with the new rows in the localTable
         constrLocalString();
@@ -133,6 +131,7 @@ public class ClientGUI extends JFrame {
     }
 
     public String[][] getLocalTableModel(){
+        localTableModel.fireTableDataChanged();
         String[][] temp = new String[localTableModel.getRowCount()][3];
         for(int r = 0; r < localTableModel.getRowCount(); r++){
             temp[r][0] = localTableModel.getValueAt(r,0).toString();

@@ -67,7 +67,7 @@ public class ReceiverUDP implements Runnable {
             dataString += new String(data);
             System.out.println("\n\nRECEIVER:: FINAL: '" + dataString + "'\n\n");
             System.out.println("RECEIVER:: INFO: Message method: " + method + " with a flag of: " + flag);
-            currentSeq = 0;
+            this.currentSeq = 0;
             try {
                 this.peer.filterMessage(method, dataString, address, port);
             }

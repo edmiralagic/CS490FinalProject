@@ -214,31 +214,28 @@ public class Client implements CanReceiveMessage {
         }
     }
 
-    public void updateTableModel(DefaultTableModel oldTableModel, DefaultTableModel newTableModel){
-        clearTableModel(oldTableModel);
+    public void updateTableModel(DefaultTableModel newTableModel){
+        clearTableModel(localTable);
         for(int r = 0; r < newTableModel.getRowCount(); r++){
 
             // Stores each row of the newTableModle in a temporary String array and adds this array to the old
             // TableModel after clearing the whole oldTableModel at the beginning of the method call.
 
-            String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString()),(newTableModel.getValueAt(r,2).toString()),(newTableModel.getValueAt(r,3).toString())};
-            oldTableModel.addRow(tempData);
+            String[] tempData = {(newTableModel.getValueAt(r,0).toString()),(newTableModel.getValueAt(r,1).toString()),(newTableModel.getValueAt(r,2).toString())};
+            localTable.addRow(tempData);
         }
-        oldTableModel.fireTableDataChanged();
+        localTable.fireTableDataChanged();
     }
 
-    public void retrieveLocalTable(){
-        DefaultTableModel temp = new DefaultTableModel(this.gui.getLocalTableModel(),localColumns);
-        this.updateTableModel(localTable, temp);
-        System.out.println("CLIENT:: INFO: Retrieved local table model..");
-    }
 
     public String[] getFileInfo(String keyword){
         try {
-            retrieveLocalTable();
+            //retrieveLocalTable();
+            localTable.fireTableDataChanged();
             String fileName = keyword.split("#")[0];
+            System.out.println(localTable.getRowCount());
             for (int r = 0; r < localTable.getRowCount(); r++) {
-                if (localTable.getValueAt(r, 0).toString().equalsIgnoreCase(keyword)) {
+                if (localTable.getValueAt(r, 0).toString().equalsIgnoreCase(fileName)) {
                     String[] info = {localTable.getValueAt(r, 0).toString(), localTable.getValueAt(r, 1).toString(), localTable.getValueAt(r, 2).toString()};
                     return info;
                 }
@@ -246,6 +243,7 @@ public class Client implements CanReceiveMessage {
         }
         catch(Exception e){
             System.out.println("CLIENT:: ERROR: Failed to get file info for TCP connection.");
+            e.printStackTrace();
         }
         return null;
     }
@@ -303,6 +301,9 @@ public class Client implements CanReceiveMessage {
                     break;
                 case "100":
                     rcvExitResponse();
+                    break;
+                case "600":
+                    startTCPSender(data);
                     break;
             }
         }
