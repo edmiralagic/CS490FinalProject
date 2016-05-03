@@ -247,16 +247,21 @@ public class Client implements CanReceiveMessage {
 
     public void startTCPSender(String reqFile){
         try {
+            System.out.println("startTCPsender is started!");
             ServerSocket serverSocket = new ServerSocket(7002);
             Socket clientSocket = serverSocket.accept();
-            String[] fileInfo = getFileInfo(reqFile);
-
-            File file = new File(fileInfo[2]); //file location
+            
+            File file = new File("C:\\Users\\deepa\\Videos\\Atlas, The Next Generation.mp4"); //file location
 
             BufferedInputStream fileInputStream = new BufferedInputStream(new FileInputStream(file));
             OutputStream outputStream = clientSocket.getOutputStream();
-
-
+            int count = 0;
+            
+            byte[] buffer = new byte[8000];
+            while((count = fileInputStream.read(buffer)) > 0) {
+                outputStream.write(buffer, 0, count);
+            }
+            
             fileInputStream.close();
             outputStream.close();
             outputStream.flush();
