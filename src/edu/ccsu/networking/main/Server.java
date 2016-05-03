@@ -151,13 +151,13 @@ public class Server implements CanReceiveMessage {
             String info = "";
             for (int r = 0; r < directory.getRowCount(); r++) {
                 if (directory.getValueAt(r, 0).equals(row[0]) && directory.getValueAt(r, 1).equals(row[1])) {
-                    info += directory.getValueAt(r, 0).toString() + "#" + directory.getValueAt(r, 1).toString() + "#" + directory.getValueAt(r, 2).toString() + "#" + directory.getValueAt(r, 3).toString();
-                    updateSender(directory.getValueAt(r, 2).toString(),directory.getValueAt(r, 3).toString());
-                    break;
+                    info = directory.getValueAt(r,0).toString() + "#" + directory.getValueAt(r,1).toString() + "#" + directory.getValueAt(r,2).toString() + "#" + directory.getValueAt(r,3).toString();
+                    updateSender(directory.getValueAt(r,2).toString(),directory.getValueAt(r,3).toString());
+                    r = directory.getRowCount();
                 }
             }
             sendHostClientReq(info);
-            Thread.sleep(5000);
+            Thread.sleep(3000);
             updateSender(ip,port);
             clientConnectionInfo(info);
         }

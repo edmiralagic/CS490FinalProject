@@ -191,6 +191,7 @@ public class Client implements CanReceiveMessage {
      */
     public void rcvExitResponse(){
         this.gui.hideWindow();
+        System.exit(0);
         //REMARK:: Memory leak! What about closing all the ports here for the Client?
     }
     

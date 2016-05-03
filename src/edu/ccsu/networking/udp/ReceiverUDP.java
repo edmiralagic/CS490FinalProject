@@ -164,10 +164,10 @@ public class ReceiverUDP implements Runnable {
                 byte[] seq =  {(byte)(currentSeq ^ 1)};
                 DatagramPacket ack = new DatagramPacket(seq,seq.length,packet.getAddress(),packet.getPort());
                 try{
-                    System.out.print("RECEIVER:: STATUS: Sending Ack " + (currentSeq^1) + " to IP address " + packet.getAddress().getHostAddress() + " and port number " + packet.getPort());
                     if(slowMode){
-                        Thread.sleep(10000);
+                        Thread.sleep(4000);
                     }
+                    System.out.print("RECEIVER:: STATUS: Sending Ack " + (currentSeq^1) + " to IP address " + packet.getAddress().getHostAddress() + " and port number " + packet.getPort());
                     receivingSocket.send(ack);
                 }
                 catch(Exception e){
